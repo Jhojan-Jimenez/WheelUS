@@ -1,60 +1,37 @@
-import mongoose from "mongoose";
-
-const vehicleSchema = new mongoose.Schema({
-  id_driver: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "users",
-    required: true,
-  },
-  plate: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  brand: {
-    type: String,
-    required: true,
-  },
-  model: {
-    type: String,
-    required: true,
-  },
-  seats: {
-    type: Number,
-    min: 1,
-    required: true,
-  },
-  SOAT: {
-    type: String,
-    required: true, // Almacena la ruta al archivo subido
-  },
-  photo: {
-    type: String,
-    required: true, // Almacena la ruta al archivo subido
-  },
-});
-
-const Vehicles = mongoose.model("Vehicles", vehicleSchema);
+import { db } from "../config/database.js";
 class vehiclesModel {
   static async getAllVehicles() {
-    // const ride = new rides({
-    //   id_driver: "6705dbb6d574d0f9418233a9",
-
-    //   origin: "U. Sabana",
-
-    //   destination: "Av. 9",
-
-    //   route: ["U. Sabana", "Av. 170", "Av. 127", "Av. 9"],
-
-    //   departure: "2023-10-07T14:30:00Z",
-
-    //   available_seats: 3,
-
-    //   fee: 3000,
-    // });
-    // await ride.save();
-    const vehicles = await Vehicles.find();
-    return vehicles;
+    try {
+      const snapshot = await db.collection("vehicles").get();
+      const rides = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      return rides;
+    } catch (error) {
+      console.error("Error obteniendo rides:", error);
+    }
+  }
+  static async createVehicle(vehicleData) {
+    try {
+      const snapshot = await db
+        .collection("vehicles")
+        .where("plate", "==", vehicleData.plate)
+        .get();
+      if (!snapshot.empty) {
+        throw new Error("This Plate Exist");
+      }
+      const snapshot2 = await db
+        .collection("vehicles")
+        .where("id_driver", "==", vehicleData.id_driver)
+        .get();
+      if (!snapshot2.empty) {
+        throw new Error("A driver only could have 1 car");
+      }
+      await db.collection("vehicles").add(vehicleData);
+    } catch (error) {
+      throw error;
+    }
   }
 }
 

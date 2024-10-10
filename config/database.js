@@ -1,15 +1,16 @@
-import mongoose from "mongoose";
 import "dotenv/config";
+import admin from "firebase-admin";
+import serviceAccount from "../firebaseKey.json" assert { type: "json" };
 
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: process.env.FIREBASE_DATA_BASE_URL,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  });
+}
 
-    console.log(`MongoDB connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1); // Detiene la aplicación si falla la conexión
-  }
-};
-
-export default connectDB;
+export const db = admin.firestore();
+export const rtdb = admin.database();
+export const auth = admin.auth();
+export const storage = admin.storage().bucket();
