@@ -1,4 +1,5 @@
-import { auth, db } from "../config/database.js";
+import { auth, db, storage } from "../config/database.js";
+
 class usersModel {
   static async getUser({ email, password }) {
     try {
@@ -13,10 +14,10 @@ class usersModel {
       }
     }
   }
-  static async createUser(userData) {
+  static async createUser(userData, photo) {
     try {
       const uid = await createUserInAuth(userData);
-      await saveUserInFirestore(userData, uid);
+      await saveUserInFirestore(userData, photo, uid);
       return uid;
     } catch (error) {
       throw error;
@@ -33,27 +34,28 @@ async function createUserInAuth({ name, lastname, id, email, password }) {
   });
   return userRecord.uid;
 }
-async function saveUserInFirestore(userData, uid) {
-  //   let photoUrl = null;
+async function saveUserInFirestore(userData, photo, uid) {
+  let photoUrl = null;
 
-  //   if (photoFile) {
-  //     const bucket = storage.bucket();
-  //     const uniqueName = `${uuidv4()}_${photoFile.originalname}`;
-  //     const file = bucket.file(uniqueName);
-  //     const stream = file.createWriteStream({
-  //       metadata: { contentType: photoFile.mimetype },
-  //     });
+  if (photo) {
+    const fileName = `${Date.now()}_${photo.originalname}`;
+    const blob = storage.file(fileName);
 
-  //     stream.end(photoFile.buffer);
-  //     await stream;
+    const blobStream = blob.createWriteStream({
+      metadata: {
+        contentType: photo.mimetype,
+      },
+    });
 
-  //     const [url] = await file.getSignedUrl({
-  //       action: "read",
-  //       expires: "03-09-2491",
-  //     });
-  //     photoUrl = url;
-  //   }
+    blobStream.end(photo.buffer);
 
+    const [url] = await blob.getSignedUrl({
+      action: "read",
+      expires: "03-09-2491",
+    });
+
+    photoUrl = url;
+  }
   await db
     .collection("users")
     .doc(uid)
@@ -61,7 +63,7 @@ async function saveUserInFirestore(userData, uid) {
       name: userData.name,
       lastname: userData.lastname,
       contact: userData.contact,
-      photo: userData.photoUrl || null,
+      photo: photoUrl || null
     });
 }
 export default usersModel;
