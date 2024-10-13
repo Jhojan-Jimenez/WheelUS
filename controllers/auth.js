@@ -6,10 +6,12 @@ class authController {
   static async login(req, res) {
     try {
       const authData = req.body;
+
       const user = await usersModel.getUser(authData);
       if (user.empty) {
         throw new Error("This user doesn't exists");
       }
+
       const token = sign(
         { email: authData.email },
         process.env.ACCESS_TOKEN_SECRET,
