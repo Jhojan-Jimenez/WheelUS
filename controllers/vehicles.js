@@ -49,6 +49,15 @@ class vehicleController {
       return res.status(500).json({ message: error.message });
     }
   }
+  static async getVehicleByPlate() {
+    const { plate } = req.params;
+  }
+  static async patchVehicle() {
+    const { plate } = req.params;
+  }
+  static async deleteVehicle() {
+    const { plate } = req.params;
+  }
 }
 
 export default vehicleController;

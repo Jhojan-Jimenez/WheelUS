@@ -1,40 +1,43 @@
-import { auth, db, storage } from "../config/database.js";
-
+import { db, storage } from "../config/database.js";
 class usersModel {
   static async getUser({ email, password }) {
     try {
-      //Para saber si el email y la contrasñea son iguales toca hacerlo en el front y devolver un tokenID
-      const user = await auth.getUserByEmail(email);
+      const user = await db
+        .collection("users")
+        .where("email", "==", email)
+        .where("password", "==", password)
+        .get();
       return user;
     } catch (error) {
-      if (error.code === "auth/user-not-found") {
-        throw new Error("User doesn't exists");
-      } else {
-        throw error;
-      }
+      throw error;
     }
   }
-  static async createUser(userData, photo) {
+  static async postUser(userData, photo) {
     try {
-      const uid = await createUserInAuth(userData);
-      await saveUserInFirestore(userData, photo, uid);
-      return uid;
+      await uniqueUser(userData.id, userData.email);
+      await saveUserInFirestore(userData, photo);
     } catch (error) {
       throw error;
     }
   }
 }
+async function uniqueUser(id, email) {
+  const idSnapshot = await db.collection("users").where("id", "==", id).get();
 
-async function createUserInAuth({ name, lastname, id, email, password }) {
-  const userRecord = await auth.createUser({
-    email: email,
-    password: password,
-    displayName: `${name} ${lastname}`,
-    uid: id.toString(),
-  });
-  return userRecord.uid;
+  if (!idSnapshot.empty) {
+    throw new Error("This ID Already Exists");
+  }
+  const emailSnapshot = await db
+    .collection("users")
+    .where("email", "==", email)
+    .get();
+
+  if (!emailSnapshot.empty) {
+    throw new Error("This Email Already Exists");
+  }
 }
-async function saveUserInFirestore(userData, photo, uid) {
+
+async function saveUserInFirestore(userData, photo) {
   let photoUrl = null;
 
   if (photo) {
@@ -58,12 +61,15 @@ async function saveUserInFirestore(userData, photo, uid) {
   }
   await db
     .collection("users")
-    .doc(uid)
+    .doc(userData.email)
     .set({
       name: userData.name,
       lastname: userData.lastname,
       contact: userData.contact,
-      photo: photoUrl || null
+      email: userData.email,
+      password: userData.password,
+      id: userData.id,
+      photo: photoUrl || null,
     });
 }
 export default usersModel;

@@ -25,6 +25,22 @@ class rideController {
       return res.status(500).json({ message: error.message });
     }
   }
+  static async getRide() {
+    const { id } = req.params;
+  }
+  static async patchRide() {
+    const { id } = req.params;
+  }
+  static async deleteRide() {
+    const { id } = req.params;
+  }
+  static async recommendedFee() {
+    const { startPoint, endPoint } = req.query;
+  }
+  static async startRoutes() {}
+  static async endRoutes() {
+    
+  }
 }
 
 export default rideController;
