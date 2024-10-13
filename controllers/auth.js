@@ -58,9 +58,9 @@ class authController {
         .status(200)
         .json({ message: "User correctly created", accessToken: token });
     } catch (error) {
-      if (error.message === "This ID Already Exists") {
+      if (error.message === "This Email Already Exists") {
         return res.status(409).json({
-          message: "This ID already exists",
+          message: "This Email Already Exists",
         });
       } else if (error.message === "This ID Already Exists") {
         return res.status(409).json({
