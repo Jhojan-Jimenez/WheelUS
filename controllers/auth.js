@@ -64,7 +64,7 @@ class authController {
         });
       } else if (error.message === "This ID Already Exists") {
         return res.status(409).json({
-          message: "This Email Already Exists",
+          message: "This ID Already Exists",
         });
       }
 
