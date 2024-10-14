@@ -1,74 +1,76 @@
-import { db, storage } from "../config/database.js";
+import admin from 'firebase-admin';
+import { db } from '../config/database.js';
+import { savePhotoInStorage } from '../lib/utils.js';
 class usersModel {
   static async getUser({ email, password }) {
-    try {
-      const user = await db
-        .collection("users")
-        .where("email", "==", email)
-        .where("password", "==", password)
-        .get();
-      return user;
-    } catch (error) {
-      throw error;
+    const user = await db
+      .collection('users')
+      .where('email', '==', email)
+      .where('password', '==', password)
+      .get();
+    if (user.empty) {
+      throw new Error("This user doesn't exists");
     }
+    return user;
+  }
+  static async getUserById(id) {
+    const user = await db.collection('users').doc(id).get();
+    if (!user.exists) {
+      throw new Error('User with this ID, does not exists');
+    }
+
+    return user;
+  }
+  static async getUserByEmail(email) {
+    const user = await db.collection('users').where('email', '==', email).get();
+    if (emailSnapshot.empty) {
+      throw new Error('User with this email, does not exists');
+    }
+    return user;
+  }
+  static async patchUser(id, newData) {
+    const user = await db.collection('users').doc(id).get();
+    return user;
+  }
+  static async patchUserRides(id, rideId) {
+    const userRef = db.collection('users').doc(id);
+
+    await userRef.update({
+      rides: admin.firestore.FieldValue.arrayUnion(rideId),
+    });
   }
   static async postUser(userData, photo) {
-    try {
-      await uniqueUser(userData.id, userData.email);
-      await saveUserInFirestore(userData, photo);
-    } catch (error) {
-      throw error;
-    }
+    await uniqueUser(userData.id, userData.email);
+    await saveUserInFirestore(userData, photo);
   }
 }
 async function uniqueUser(id, email) {
-  const idSnapshot = await db.collection("users").where("id", "==", id).get();
-
-  if (!idSnapshot.empty) {
-    throw new Error("This ID Already Exists");
+  const idSnapshot = await usersModel.getUserById(id);
+  if (idSnapshot.exists) {
+    throw new Error('This ID Already Exists');
   }
-  const emailSnapshot = await db
-    .collection("users")
-    .where("email", "==", email)
-    .get();
+  const emailSnapshot = await usersModel.getUserByEmail(email);
 
   if (!emailSnapshot.empty) {
-    throw new Error("This Email Already Exists");
+    throw new Error('This Email Already Exists');
   }
 }
 
 async function saveUserInFirestore(userData, photo) {
+  const { name, lastname, contact, email, password, id } = userData;
   let photoUrl = null;
-
   if (photo) {
-    const fileName = `${Date.now()}_${photo.originalname}`;
-    const blob = storage.file(fileName);
-
-    const blobStream = blob.createWriteStream({
-      metadata: {
-        contentType: photo.mimetype,
-      },
-    });
-
-    blobStream.end(photo.buffer);
-
-    const [url] = await blob.getSignedUrl({
-      action: "read",
-      expires: "03-09-2491",
-    });
-
-    photoUrl = url;
+    photoUrl = await savePhotoInStorage(photo);
   }
   await db
-    .collection("users")
-    .doc(userData.email)
+    .collection('users')
+    .doc(id)
     .set({
-      name: userData.name,
-      lastname: userData.lastname,
-      contact: userData.contact,
-      email: userData.email,
-      password: userData.password,
-      id: userData.id,
+      name,
+      lastname,
+      contact,
+      email,
+      password,
       photo: photoUrl || null,
     });
 }

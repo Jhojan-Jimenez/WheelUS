@@ -1,6 +1,6 @@
-import "dotenv/config";
-import admin from "firebase-admin";
-import serviceAccount from "../firebaseKey.json" assert { type: "json" };
+import 'dotenv/config';
+import admin from 'firebase-admin';
+import serviceAccount from '../firebaseKey.json' assert { type: 'json' };
 
 if (!admin.apps.length) {
   admin.initializeApp({

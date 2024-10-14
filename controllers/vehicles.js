@@ -1,5 +1,5 @@
-import { formatZodErrors, vehicleSchema } from "../lib/validators.js";
-import vehiclesModel from "../models/vehicles.js";
+import { formatZodErrors, vehicleSchema } from '../lib/validators.js';
+import vehiclesModel from '../models/vehicles.js';
 
 class vehicleController {
   static async getVehicles(req, res) {
@@ -29,22 +29,46 @@ class vehicleController {
   static async postVehicle(req, res) {
     try {
       const vehicleData = req.body;
-      const validData = vehicleSchema.safeParse(vehicleData);
+
+      const photos = req.files;
+
+      const vehiclePhoto =
+        photos.vehiclePhoto && photos.vehiclePhoto.length > 0
+          ? photos.vehiclePhoto[0]
+          : null;
+      const soat =
+        photos.soat && photos.soat.length > 0 ? photos.soat[0] : null;
+
+      const validData = vehicleSchema.safeParse({
+        ...vehicleData,
+        vehiclePhoto,
+        soat,
+      });
       if (!validData.success) {
-        throw formatZodErrors(validData.error.format());
+        return res.status(400).json({
+          message: 'Validation error',
+          errors: validData.error.format(),
+        });
       }
-      await vehiclesModel.createVehicle(vehicleData);
+
+      await vehiclesModel.createVehicle(vehicleData, vehiclePhoto, soat);
       res.status(200).json({
-        message: "Vehicle registration successful",
+        message: 'Vehicle registration successful',
         vehicle: vehicleData,
       });
     } catch (error) {
-      if (error.message === "This Plate Exist") {
-        return res.status(400).json({ message: error.message });
-      } else if (error.message === "A driver only could have 1 car") {
-        return res.status(400).json({ message: error.message });
-      } else if (error.message === incorrect_information) {
-        return res.status(400).json({ message: error.message });
+      console.log(error);
+
+      if (error.message === 'This Plate Exist') {
+        return res.status(409).json({ message: 'This plate already exists' });
+      } else if (error.message === 'A driver can only have a vehicle') {
+        return res
+          .status(409)
+          .json({ message: 'A driver can only have a vehicle' });
+      } else if (error.message === 'This driver ID does not exists') {
+        return res
+          .status(409)
+          .json({ message: 'This driver ID does not exists' });
       }
       return res.status(500).json({ message: error.message });
     }

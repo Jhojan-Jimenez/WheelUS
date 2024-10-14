@@ -1,5 +1,5 @@
-import { formatZodErrors, rideSchema } from "../lib/validators.js";
-import ridesModel from "../models/rides.js";
+import { formatZodErrors, rideSchema } from '../lib/validators.js';
+import ridesModel from '../models/rides.js';
 
 class rideController {
   static async getRides(req, res) {
@@ -15,13 +15,24 @@ class rideController {
       const rideData = req.body;
       const validData = rideSchema.safeParse(rideData);
       if (!validData.success) {
-        throw formatZodErrors(validData.error.format());
+        return res.status(400).json({
+          message: 'Validation error',
+          errors: validData.error.format(),
+        });
       }
-      await ridesModel.createRide(rideData);
-      res
-        .status(200)
-        .json({ message: "Ride correctly created", ride: rideData });
+      const rideId = await ridesModel.createRide(rideData);
+      res.status(200).json({
+        message: 'Ride correctly created',
+        ride: { rideId: rideId, ...rideData },
+      });
     } catch (error) {
+      console.log(error);
+      if (error.message === 'This vehicle plate does not exists') {
+        return res
+          .status(400)
+          .json({ message: 'This vehicle plate does not exists' });
+      }
+
       return res.status(500).json({ message: error.message });
     }
   }
@@ -38,9 +49,7 @@ class rideController {
     const { startPoint, endPoint } = req.query;
   }
   static async startRoutes() {}
-  static async endRoutes() {
-    
-  }
+  static async endRoutes() {}
 }
 
 export default rideController;

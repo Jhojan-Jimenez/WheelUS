@@ -1,6 +1,8 @@
-import multer from "multer";
+import multer from 'multer';
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage }).single("perfil_photo");
-
-export default upload;
+export const upload = multer({ storage }).single('profilePhoto');
+export const uploadVehicle = multer({ storage }).fields(([
+  { name: 'vehiclePhoto', maxCount: 1 },
+  { name: 'soat', maxCount: 1 },
+]))
