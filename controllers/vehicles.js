@@ -51,14 +51,16 @@ class vehicleController {
         });
       }
 
-      await vehiclesModel.createVehicle(vehicleData, vehiclePhoto, soat);
+      const finalData = await vehiclesModel.createVehicle(
+        vehicleData,
+        vehiclePhoto,
+        soat
+      );
       res.status(200).json({
         message: 'Vehicle registration successful',
-        vehicle: vehicleData,
+        vehicle: finalData,
       });
     } catch (error) {
-      console.log(error);
-
       if (error.message === 'This Plate Exist') {
         return res.status(409).json({ message: 'This plate already exists' });
       } else if (error.message === 'A driver can only have a vehicle') {

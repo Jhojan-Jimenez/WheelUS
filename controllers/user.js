@@ -6,11 +6,13 @@ class userController {
   static async getUser(req, res) {
     try {
       const { id } = req.params;
-      await usersModel.getUserById(id);
-      res.status(200).json({ message: 'Successful login', accessToken: token });
+      const user = await usersModel.getUserById(id);
+      res.status(200).json({ user: user });
     } catch (error) {
-      if (error.message === "User doesn't exists") {
-        return res.status(403).json({ message: 'Unathorized access' });
+      if (error.message === 'User with this ID, does not exists') {
+        return res
+          .status(403)
+          .json({ message: 'User with this ID, does not exists' });
       }
       return res.status(500).json({ message: error.message });
     }
@@ -54,10 +56,9 @@ class userController {
     try {
       const { id } = req.params;
       const { rideId } = req.body;
-      const user = await usersModel.patchUserRides(id, rideId);
+      await usersModel.patchUserRides(id, rideId);
       res.status(200).json({ message: 'Viaje agendado correctamente' });
     } catch (error) {
-      console.log(error);
       return res.status(500).json({ message_error: error.message });
     }
   }

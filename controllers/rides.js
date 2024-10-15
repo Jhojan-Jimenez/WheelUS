@@ -26,7 +26,6 @@ class rideController {
         ride: { rideId: rideId, ...rideData },
       });
     } catch (error) {
-      console.log(error);
       if (error.message === 'This vehicle plate does not exists') {
         return res
           .status(400)

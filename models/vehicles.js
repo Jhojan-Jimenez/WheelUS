@@ -17,14 +17,20 @@ class vehiclesModel {
   }
   static async createVehicle(vehicleData, vehiclePhoto, soat) {
     await uniqueVehicle(vehicleData);
-    await saveVehicleInFirestore(vehicleData, vehiclePhoto, soat);
+    const finalData = await saveVehicleInFirestore(
+      vehicleData,
+      vehiclePhoto,
+      soat
+    );
+    await usersModel.patchUserVehicle(vehicleData.id_driver, vehicleData.plate);
+    return finalData;
   }
   static async getVehicleByPlate(plate) {
     const vehicle = await db.collection('vehicles').doc(plate).get();
     if (!vehicle.exists) {
       throw new Error('This vehicle plate does not exists');
     }
-    return vehicle;
+    return vehicle.data();
   }
   static async addRideToVehicle(rideId, plate) {
     const vehicleRef = db.collection('vehicles').doc(plate);
@@ -35,11 +41,14 @@ class vehiclesModel {
   }
 }
 async function uniqueVehicle(vehicleData) {
-  const snapshot = await vehiclesModel.getVehicleByPlate(vehicleData.plate);
+  const snapshot = await db.collection('vehicles').doc(vehicleData.plate).get();
   if (snapshot.exists) {
     throw new Error('This Plate Exist');
   }
-  const snapshot2 = await usersModel.getUserById(vehicleData.id_driver);
+  const snapshot2 = await db
+    .collection('users')
+    .doc(vehicleData.id_driver)
+    .get();
   if (!snapshot2.exists) {
     throw new Error('This driver ID does not exists');
   }
@@ -52,19 +61,13 @@ async function uniqueVehicle(vehicleData) {
   }
 }
 async function saveVehicleInFirestore(vehicleData, vehiclePhoto, soat) {
-  const { id_driver, model, plate, seats, brand } = vehicleData;
+  const { plate } = vehicleData;
   const vehiclePhotoUrl = await savePhotoInStorage(vehiclePhoto);
   const soatUrl = await savePhotoInStorage(soat);
+  const finalData = { ...vehicleData, SOAT: soatUrl, photo: vehiclePhotoUrl };
 
-  await db.collection('vehicles').doc(plate).set({
-    id_driver,
-    model,
-    plate,
-    seats,
-    brand,
-    SOAT: soatUrl,
-    photo: vehiclePhotoUrl,
-  });
+  await db.collection('vehicles').doc(plate).set(finalData);
+  return finalData;
 }
 
 export default vehiclesModel;

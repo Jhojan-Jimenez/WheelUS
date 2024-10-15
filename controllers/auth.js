@@ -6,7 +6,7 @@ class authController {
   static async login(req, res) {
     try {
       const authData = req.body;
-      const user = await usersModel.getUser(authData);
+      const user = await usersModel.existUser(authData);
       const userId = user.docs[0].id;
       const token = sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '1h',
