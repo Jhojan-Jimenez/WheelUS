@@ -35,7 +35,6 @@ class usersModel {
     return userData;
   }
   static async patchUser(id, newData) {
-    await usersModel.getUserById(id);
     const userRef = db.collection('users').doc(id);
     const updateData = { ...newData };
 
@@ -55,7 +54,6 @@ class usersModel {
     });
   }
   static async patchUserRides(id, rideId) {
-    await usersModel.getUserById(id);
     await ridesModel.getRideById(rideId);
     const userRef = db.collection('users').doc(id);
 

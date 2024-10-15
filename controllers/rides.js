@@ -32,8 +32,10 @@ class rideController {
       return res.status(500).json({ message: error.message });
     }
   }
-  static async getRide() {
-    const { id } = req.params;
+  static async getRide(req,res) {
+    res.status(200).json({
+      ride: req.ride,
+    });
   }
   static async deleteRide() {
     const { id } = req.params;

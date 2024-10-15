@@ -40,7 +40,6 @@ class vehiclesModel {
     });
   }
   static async patchVehicle(plate, newData) {
-    await vehiclesModel.getVehicleByPlate(plate);
     const vehicleRef = db.collection('vehicles').doc(plate);
     const updateData = { ...newData };
     if (newData.photo) {

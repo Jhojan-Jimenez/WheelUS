@@ -79,8 +79,8 @@ class vehicleController {
       return res.status(500).json({ message: error.message });
     }
   }
-  static async getVehicleByPlate() {
-    const { plate } = req.params;
+  static async getVehicleByPlate(req, res) {
+    res.status(200).json({ vehicle: req.vehicle });
   }
   static async patchVehicle(req, res) {
     try {
