@@ -1,6 +1,9 @@
 import {
-  formatZodErrors,
-  validatePatchVehicle,
+  PatchInmutableAtributes,
+  validationErrors,
+} from '../errors/CustomErrors.js';
+import {
+  validatePatchVehicleFields,
   vehiclePatchSchema,
   vehicleSchema,
 } from '../lib/validators.js';
@@ -34,9 +37,7 @@ class vehicleController {
   static async postVehicle(req, res) {
     try {
       const vehicleData = req.body;
-
       const photos = req.files;
-
       const vehiclePhoto =
         photos.vehiclePhoto && photos.vehiclePhoto.length > 0
           ? photos.vehiclePhoto[0]
@@ -49,12 +50,8 @@ class vehicleController {
         vehiclePhoto,
         soat,
       });
-      if (!validData.success) {
-        return res.status(400).json({
-          message: 'Validation error',
-          errors: validData.error.format(),
-        });
-      }
+      const isValid = validationErrors(validData, res);
+      if (isValid !== true) return;
 
       const finalData = await vehiclesModel.createVehicle(
         vehicleData,
@@ -62,20 +59,22 @@ class vehicleController {
         soat
       );
       res.status(200).json({
-        message: 'Vehicle registration successful',
+        message: 'Vehiculo creado correctamente',
         vehicle: finalData,
       });
     } catch (error) {
-      if (error.message === 'This Plate Exist') {
-        return res.status(409).json({ message: 'This plate already exists' });
-      } else if (error.message === 'A driver can only have a vehicle') {
+      if (error.message === 'VehicleAlreadyExists') {
         return res
           .status(409)
-          .json({ message: 'A driver can only have a vehicle' });
-      } else if (error.message === 'This driver ID does not exists') {
+          .json({ message: 'Un vehiculo con esta placa ya existe' });
+      } else if (error.message === 'DriverAlreadyHasVehicle') {
         return res
           .status(409)
-          .json({ message: 'This driver ID does not exists' });
+          .json({ message: 'Un usuario solo puede tener un vehiculo' });
+      } else if (error.message === 'DriverNotFound') {
+        return res
+          .status(409)
+          .json({ message: 'No existe un usuario con este ID' });
       }
       return res.status(500).json({ message: error.message });
     }
@@ -103,18 +102,16 @@ class vehicleController {
         }
       }
       const validData = vehiclePatchSchema.safeParse(newData);
-      if (!validData.success) {
-        return res.status(400).json({
-          message: 'Validation error',
-          errors: validData.error.format(),
-        });
-      }
-      validatePatchVehicle(newData);
+      const isValid = validationErrors(validData, res);
+      if (isValid !== true) return;
+      validatePatchVehicleFields(newData);
       await vehiclesModel.patchVehicle(plate, newData);
       res.status(200).json({ message: 'Vehiculo Modificado correctamente' });
     } catch (error) {
-        console.log(error);
-        
+      if (error instanceof PatchInmutableAtributes) {
+        return res.status(400).json({ message: error.message });
+      }
+
       return res.status(500).json({ message_error: error.message });
     }
   }

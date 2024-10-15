@@ -1,3 +1,4 @@
+import { validationErrors } from '../errors/CustomErrors.js';
 import { formatZodErrors, rideSchema } from '../lib/validators.js';
 import ridesModel from '../models/rides.js';
 
@@ -14,31 +15,24 @@ class rideController {
     try {
       const rideData = req.body;
       const validData = rideSchema.safeParse(rideData);
-      if (!validData.success) {
-        return res.status(400).json({
-          message: 'Validation error',
-          errors: validData.error.format(),
-        });
-      }
+      const isValid = validationErrors(validData, res);
+      if (isValid !== true) return;
       const rideId = await ridesModel.createRide(rideData);
       res.status(200).json({
-        message: 'Ride correctly created',
+        message: 'Ride creado correctamente',
         ride: { rideId: rideId, ...rideData },
       });
     } catch (error) {
-      if (error.message === 'This vehicle plate does not exists') {
+      if (error.message === 'VehicleNotFound') {
         return res
           .status(400)
-          .json({ message: 'This vehicle plate does not exists' });
+          .json({ message: 'No existe un vehiculo con esa placa' });
       }
 
       return res.status(500).json({ message: error.message });
     }
   }
   static async getRide() {
-    const { id } = req.params;
-  }
-  static async patchRide() {
     const { id } = req.params;
   }
   static async deleteRide() {

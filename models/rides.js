@@ -17,7 +17,7 @@ class ridesModel {
   static async getRideById(id) {
     const ride = await db.collection('rides').doc(id).get();
     if (!ride.exists) {
-      throw new Error('Ride with this ID, does not exists');
+      throw new Error('RideNotFound');
     }
     return ride.data();
   }

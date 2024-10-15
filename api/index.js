@@ -18,7 +18,7 @@ app.use('/ride', authCookieJWT, rideRouter);
 app.use('/vehicle', authCookieJWT, vehicleRouter);
 
 app.use((req, res) => {
-  res.status(404).json({ message: "This route doesn't exist" });
+  res.status(404).json({ message: 'Esta ruta no existe' });
 });
 
 app.listen(port, () => {

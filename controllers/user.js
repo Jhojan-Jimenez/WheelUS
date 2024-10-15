@@ -1,4 +1,9 @@
-import { userPatchSchema, validatePatchUser } from '../lib/validators.js';
+import {
+  PatchInmutableAtributes,
+  UserNotFoundError,
+  validationErrors,
+} from '../errors/CustomErrors.js';
+import { userPatchSchema, validatePatchUserFields } from '../lib/validators.js';
 import usersModel from '../models/users.js';
 
 class userController {
@@ -8,10 +13,8 @@ class userController {
       const user = await usersModel.getUserById(id);
       res.status(200).json({ user: user });
     } catch (error) {
-      if (error.message === 'User with this ID, does not exists') {
-        return res
-          .status(403)
-          .json({ message: 'User with this ID, does not exists' });
+      if (error instanceof UserNotFoundError) {
+        return res.status(404).json({ message: error.message });
       }
       return res.status(500).json({ message: error.message });
     }
@@ -25,17 +28,19 @@ class userController {
         newData.photo = req.file;
       }
       const validData = userPatchSchema.safeParse(newData);
-      if (!validData.success) {
-        return res.status(400).json({
-          message: 'Validation error',
-          errors: validData.error.format(),
-        });
-      }
-      validatePatchUser(newData);
+      const isValid = validationErrors(validData, res);
+      if (isValid !== true) return;
+      validatePatchUserFields(newData);
 
       await usersModel.patchUser(id, newData);
       res.status(200).json({ message: 'Usuario Modificado correctamente' });
     } catch (error) {
+      if (error instanceof PatchInmutableAtributes) {
+        return res.status(400).json({ message: error.message });
+      }
+      if (error instanceof UserNotFoundError) {
+        return res.status(404).json({ message: error.message });
+      }
       return res.status(500).json({ message_error: error.message });
     }
   }
@@ -46,6 +51,13 @@ class userController {
       await usersModel.patchUserRides(id, rideId);
       res.status(200).json({ message: 'Viaje agendado correctamente' });
     } catch (error) {
+      if (error instanceof UserNotFoundError) {
+        return res.status(404).json({ message: error.message });
+      } else if (error.message === 'RideNotFound') {
+        return res
+          .status(404)
+          .json({ message: 'No existe o no esta activo dicho wheels' });
+      }
       return res.status(500).json({ message_error: error.message });
     }
   }

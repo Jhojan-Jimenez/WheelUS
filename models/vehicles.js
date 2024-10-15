@@ -28,7 +28,7 @@ class vehiclesModel {
   static async getVehicleByPlate(plate) {
     const vehicle = await db.collection('vehicles').doc(plate).get();
     if (!vehicle.exists) {
-      throw new Error('This vehicle plate does not exists');
+      throw new Error('VehicleNotFound');
     }
     return vehicle.data();
   }
@@ -60,21 +60,21 @@ class vehiclesModel {
 async function uniqueVehicle(vehicleData) {
   const snapshot = await db.collection('vehicles').doc(vehicleData.plate).get();
   if (snapshot.exists) {
-    throw new Error('This Plate Exist');
+    throw new Error('VehicleAlreadyExists');
   }
   const snapshot2 = await db
     .collection('users')
     .doc(vehicleData.id_driver)
     .get();
-  if (!snapshot2.exists) {
-    throw new Error('This driver ID does not exists');
+  if (!snapshot2.exists) {d
+    throw new Error('DriverNotFound');
   }
   const snapshot3 = await db
     .collection('vehicles')
     .where('id_driver', '==', vehicleData.id_driver)
     .get();
   if (!snapshot3.empty) {
-    throw new Error('A driver can only have a vehicle');
+    throw new Error('DriverAlreadyHasVehicle');
   }
 }
 async function saveVehicleInFirestore(vehicleData, vehiclePhoto, soat) {

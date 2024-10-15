@@ -3,6 +3,7 @@ import { db } from '../config/database.js';
 import { savePhotoInStorage } from '../lib/utils.js';
 import ridesModel from './rides.js';
 import vehiclesModel from './vehicles.js';
+import { UserNotFoundError } from '../errors/CustomErrors.js';
 class usersModel {
   static async existUser({ email, password }) {
     const user = await db
@@ -11,14 +12,14 @@ class usersModel {
       .where('password', '==', password)
       .get();
     if (user.empty) {
-      throw new Error("This user doesn't exists");
+      throw new Error('UserNotFound');
     }
     return user;
   }
   static async getUserById(id) {
     const user = await db.collection('users').doc(id).get();
     if (!user.exists) {
-      throw new Error('User with this ID, does not exists');
+      throw new UserNotFoundError(`El usuario con el ID "${id}" no existe`);
     }
     const { password, ...userData } = user.data();
     return userData;
@@ -26,7 +27,9 @@ class usersModel {
   static async getUserByEmail(email) {
     const user = await db.collection('users').where('email', '==', email).get();
     if (emailSnapshot.empty) {
-      throw new Error('User with this email, does not exists');
+      throw new UserNotFoundError(
+        `El usuario con el email "${email}" no existe`
+      );
     }
     const { password, ...userData } = user.docs[0].data();
     return userData;
@@ -40,7 +43,7 @@ class usersModel {
       const photoUrl = await savePhotoInStorage(newData.photo);
       updateData.photo = photoUrl;
     }
-    
+
     await userRef.update(updateData);
   }
   static async patchUserVehicle(id, plate) {
@@ -52,6 +55,7 @@ class usersModel {
     });
   }
   static async patchUserRides(id, rideId) {
+    await usersModel.getUserById(id);
     await ridesModel.getRideById(rideId);
     const userRef = db.collection('users').doc(id);
 
@@ -68,7 +72,7 @@ class usersModel {
 async function uniqueUser(id, email) {
   const idSnapshot = await db.collection('users').doc(id).get();
   if (idSnapshot.exists) {
-    throw new Error('This ID Already Exists');
+    throw new Error('IDAlreadyExists');
   }
   const emailSnapshot = await db
     .collection('users')
@@ -76,7 +80,7 @@ async function uniqueUser(id, email) {
     .get();
 
   if (!emailSnapshot.empty) {
-    throw new Error('This Email Already Exists');
+    throw new Error('EmailAlreadyExists');
   }
 }
 
