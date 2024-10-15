@@ -10,7 +10,7 @@ import {
 import vehiclesModel from '../models/vehicles.js';
 
 class vehicleController {
-  static async getVehicles(req, res) {
+  static async getVehicles(req, res, next) {
     try {
       const vehicles = await vehiclesModel.getAllVehicles();
       res.status(200).json({ vehicles: vehicles });
@@ -31,10 +31,10 @@ class vehicleController {
       //       .json({ message: "User correctly logged in", accessToken: token });
       //   }
     } catch (error) {
-      return res.status(500).json({ message: error.message });
+      next(error);
     }
   }
-  static async postVehicle(req, res) {
+  static async postVehicle(req, res, next) {
     try {
       const vehicleData = req.body;
       const photos = req.files;
@@ -76,13 +76,13 @@ class vehicleController {
           .status(409)
           .json({ message: 'No existe un usuario con este ID' });
       }
-      return res.status(500).json({ message: error.message });
+      next(error);
     }
   }
   static async getVehicleByPlate(req, res) {
     res.status(200).json({ vehicle: req.vehicle });
   }
-  static async patchVehicle(req, res) {
+  static async patchVehicle(req, res, next) {
     try {
       const { plate } = req.params;
       const newData = { ...req.body };
@@ -112,11 +112,15 @@ class vehicleController {
         return res.status(400).json({ message: error.message });
       }
 
-      return res.status(500).json({ message_error: error.message });
+      next(error);
     }
   }
-  static async deleteVehicle() {
-    const { plate } = req.params;
+  static async deleteVehicle(req, res, next) {
+    try {
+      const { plate } = req.params;
+    } catch (error) {
+      next(error);
+    }
   }
 }
 

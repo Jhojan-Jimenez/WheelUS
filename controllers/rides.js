@@ -3,15 +3,15 @@ import { formatZodErrors, rideSchema } from '../lib/validators.js';
 import ridesModel from '../models/rides.js';
 
 class rideController {
-  static async getRides(req, res) {
+  static async getRides(req, res, next) {
     try {
       const rides = await ridesModel.getAllRides();
       res.status(200).json({ rides: rides });
     } catch (error) {
-      return res.status(500).json({ message: error.message });
+      next(error);
     }
   }
-  static async postRide(req, res) {
+  static async postRide(req, res, next) {
     try {
       const rideData = req.body;
       const validData = rideSchema.safeParse(rideData);
@@ -29,22 +29,40 @@ class rideController {
           .json({ message: 'No existe un vehiculo con esa placa' });
       }
 
-      return res.status(500).json({ message: error.message });
+      next(error);
     }
   }
-  static async getRide(req,res) {
+  static async getRide(req, res) {
     res.status(200).json({
       ride: req.ride,
     });
   }
-  static async deleteRide() {
-    const { id } = req.params;
+  static async deleteRide(req, res, next) {
+    try {
+      const { id } = req.params;
+    } catch (error) {
+      next(error);
+    }
   }
-  static async recommendedFee() {
-    const { startPoint, endPoint } = req.query;
+  static async recommendedFee(req, res, next) {
+    try {
+      const { startPoint, endPoint } = req.query;
+    } catch (error) {
+      next(error);
+    }
   }
-  static async startRoutes() {}
-  static async endRoutes() {}
+  static async startRoutes(req, res, next) {
+    try {
+    } catch (error) {
+      next(error);
+    }
+  }
+  static async endRoutes(req, res, next) {
+    try {
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default rideController;

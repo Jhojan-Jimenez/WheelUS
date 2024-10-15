@@ -4,16 +4,12 @@ import usersModel from './users.js';
 import admin from 'firebase-admin';
 class vehiclesModel {
   static async getAllVehicles() {
-    try {
-      const snapshot = await db.collection('vehicles').get();
-      const rides = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      return rides;
-    } catch (error) {
-      console.error('Error obteniendo rides:', error);
-    }
+    const snapshot = await db.collection('vehicle').get();
+    const rides = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    return rides;
   }
   static async createVehicle(vehicleData, vehiclePhoto, soat) {
     await uniqueVehicle(vehicleData);
@@ -65,7 +61,8 @@ async function uniqueVehicle(vehicleData) {
     .collection('users')
     .doc(vehicleData.id_driver)
     .get();
-  if (!snapshot2.exists) {d
+  if (!snapshot2.exists) {
+    d;
     throw new Error('DriverNotFound');
   }
   const snapshot3 = await db

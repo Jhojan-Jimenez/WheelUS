@@ -11,7 +11,7 @@ class userController {
     res.status(200).json({ user: req.user });
   }
 
-  static async patchUser(req, res) {
+  static async patchUser(req, res, next) {
     try {
       const { id } = req.params;
       const newData = { ...req.body };
@@ -29,10 +29,10 @@ class userController {
       if (error instanceof PatchInmutableAtributes) {
         return res.status(400).json({ message: error.message });
       }
-      return res.status(500).json({ message_error: error.message });
+      next(error);
     }
   }
-  static async patchUserRides(req, res) {
+  static async patchUserRides(req, res, next) {
     try {
       const { id } = req.params;
       const { rideId } = req.body;
@@ -44,7 +44,7 @@ class userController {
           .status(404)
           .json({ message: 'No existe o no esta activo dicho wheels' });
       }
-      return res.status(500).json({ message_error: error.message });
+      next(error)
     }
   }
 }

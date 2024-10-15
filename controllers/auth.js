@@ -4,7 +4,7 @@ import usersModel from '../models/users.js';
 import { validationErrors } from '../errors/CustomErrors.js';
 
 class authController {
-  static async login(req, res) {
+  static async login(req, res, next) {
     try {
       const authData = req.body;
       const user = await usersModel.existUser(authData);
@@ -17,11 +17,11 @@ class authController {
           .status(404)
           .json({ message: 'No existe un usuario con tales credenciales' });
       }
-      return res.status(500).json({ message_error: error.message });
+      next(error);
     }
   }
 
-  static async register(req, res) {
+  static async register(req, res, next) {
     try {
       const authData = req.body;
       const photo = req.file;
@@ -45,7 +45,7 @@ class authController {
         });
       }
 
-      return res.status(500).json({ message_error: error.message });
+      next(error);
     }
   }
 }
