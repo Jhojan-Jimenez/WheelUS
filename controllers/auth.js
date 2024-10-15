@@ -6,6 +6,8 @@ class authController {
   static async login(req, res) {
     try {
       const authData = req.body;
+      
+      
       const user = await usersModel.existUser(authData);
       const userId = user.docs[0].id;
       const token = sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, {
@@ -27,6 +29,7 @@ class authController {
   static async register(req, res) {
     try {
       const authData = req.body;
+      
       const photo = req.file;
       const validData = userRegSchema.safeParse({ ...authData, photo: photo });
       if (!validData.success) {

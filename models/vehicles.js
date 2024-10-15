@@ -39,6 +39,23 @@ class vehiclesModel {
       rides: admin.firestore.FieldValue.arrayUnion(rideId),
     });
   }
+  static async patchVehicle(plate, newData) {
+    await vehiclesModel.getVehicleByPlate(plate);
+    const vehicleRef = db.collection('vehicles').doc(plate);
+    const updateData = { ...newData };
+    if (newData.photo) {
+      const vehiclePhotoUrl = await savePhotoInStorage(newData.photo);
+
+      updateData.photo = vehiclePhotoUrl;
+    }
+    if (newData.soat) {
+      const soatUrl = await savePhotoInStorage(newData.soat);
+
+      updateData.SOAT = soatUrl;
+    }
+
+    await vehicleRef.update(updateData);
+  }
 }
 async function uniqueVehicle(vehicleData) {
   const snapshot = await db.collection('vehicles').doc(vehicleData.plate).get();

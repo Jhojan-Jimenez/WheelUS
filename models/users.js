@@ -32,8 +32,16 @@ class usersModel {
     return userData;
   }
   static async patchUser(id, newData) {
-    const user = await db.collection('users').doc(id).get();
-    return user;
+    await usersModel.getUserById(id);
+    const userRef = db.collection('users').doc(id);
+    const updateData = { ...newData };
+
+    if (newData.photo) {
+      const photoUrl = await savePhotoInStorage(newData.photo);
+      updateData.photo = photoUrl;
+    }
+    
+    await userRef.update(updateData);
   }
   static async patchUserVehicle(id, plate) {
     await vehiclesModel.getVehicleByPlate(plate);

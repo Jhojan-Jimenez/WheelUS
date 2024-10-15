@@ -1,4 +1,9 @@
-import { formatZodErrors, vehicleSchema } from '../lib/validators.js';
+import {
+  formatZodErrors,
+  validatePatchVehicle,
+  vehiclePatchSchema,
+  vehicleSchema,
+} from '../lib/validators.js';
 import vehiclesModel from '../models/vehicles.js';
 
 class vehicleController {
@@ -78,8 +83,40 @@ class vehicleController {
   static async getVehicleByPlate() {
     const { plate } = req.params;
   }
-  static async patchVehicle() {
-    const { plate } = req.params;
+  static async patchVehicle(req, res) {
+    try {
+      const { plate } = req.params;
+      const newData = { ...req.body };
+      const photos = req.files;
+      if (photos) {
+        const vehiclePhoto =
+          photos.vehiclePhoto && photos.vehiclePhoto.length > 0
+            ? photos.vehiclePhoto[0]
+            : null;
+        if (vehiclePhoto) {
+          newData.photo = vehiclePhoto;
+        }
+        const soat =
+          photos.soat && photos.soat.length > 0 ? photos.soat[0] : null;
+        if (soat) {
+          newData.soat = soat;
+        }
+      }
+      const validData = vehiclePatchSchema.safeParse(newData);
+      if (!validData.success) {
+        return res.status(400).json({
+          message: 'Validation error',
+          errors: validData.error.format(),
+        });
+      }
+      validatePatchVehicle(newData);
+      await vehiclesModel.patchVehicle(plate, newData);
+      res.status(200).json({ message: 'Vehiculo Modificado correctamente' });
+    } catch (error) {
+        console.log(error);
+        
+      return res.status(500).json({ message_error: error.message });
+    }
   }
   static async deleteVehicle() {
     const { plate } = req.params;
