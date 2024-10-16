@@ -8,12 +8,19 @@ import usersModel from '../models/users.js';
 import jsonwebtoken from 'jsonwebtoken';
 
 class userController {
-  static async getUserByToken(req, res) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-    const { id } = jsonwebtoken.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const user = await usersModel.getUserById(id);
-    res.status(200).json({ user: user });
+  static async getUserByToken(req, res, next) {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+      const { id } = jsonwebtoken.verify(
+        token,
+        process.env.ACCESS_TOKEN_SECRET
+      );
+      const user = await usersModel.getUserById(id);
+      res.status(200).json({ user: user });
+    } catch (error) {
+      next(error);
+    }
   }
   static async getUserByID(req, res) {
     res.status(200).json({ user: req.user });
