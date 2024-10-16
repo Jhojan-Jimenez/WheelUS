@@ -49,12 +49,14 @@ class ridesModel {
   static async getStartingPoints() {
     const snapshot = await db.collection('rides').get();
     const points = snapshot.docs.map((doc) => doc.data().origin);
-    return points;
+    const uniquePoints = [...new Set(points)];
+    return uniquePoints;
   }
   static async getEndingPoints() {
     const snapshot = await db.collection('rides').get();
     const points = snapshot.docs.map((doc) => doc.data().destination);
-    return points;
+    const uniquePoints = [...new Set(points)];
+    return uniquePoints;
   }
 }
 

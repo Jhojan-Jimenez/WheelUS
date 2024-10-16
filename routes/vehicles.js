@@ -22,5 +22,10 @@ vehicleRouter.delete(
   verifyVehiclePlate,
   vehicleController.deleteVehicle
 );
+vehicleRouter.get(
+  '/:plate/rides',
+  verifyVehiclePlate,
+  vehicleController.getVehicleRides
+);
 
 export default vehicleRouter;

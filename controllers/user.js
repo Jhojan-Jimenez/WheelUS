@@ -62,6 +62,20 @@ class userController {
       next(error);
     }
   }
+  static async getUserRides(req, res, next) {
+    try {
+      const { id } = req.params;
+      const userRides = await usersModel.getUserRides(id);
+      res.status(200).json({ userRides: userRides });
+    } catch (error) {
+      if (error.message === 'RideNotFound') {
+        return res
+          .status(404)
+          .json({ message: 'No existe o no esta activo dicho wheels' });
+      }
+      next(error);
+    }
+  }
 }
 
 export default userController;

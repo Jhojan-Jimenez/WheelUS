@@ -132,6 +132,20 @@ class vehicleController {
       next(error);
     }
   }
+  static async getVehicleRides(req, res, next) {
+    try {
+      const { plate } = req.params;
+      const vehicleRides = await vehiclesModel.getVehicleRides(plate)
+      res.status(200).json({ vehicleRides: vehicleRides });
+    } catch (error) {
+      if (error.message === 'RideNotFound') {
+        return res
+          .status(404)
+          .json({ message: 'No existe o no esta activo dicho wheels' });
+      }
+      next(error);
+    }
+  }
 }
 
 export default vehicleController;

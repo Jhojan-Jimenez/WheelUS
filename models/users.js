@@ -62,6 +62,19 @@ class usersModel {
     });
     await ridesModel.patchRidePassengers(rideId, id);
   }
+  static async getUserRides(id) {
+    const user = await this.getUserById(id);
+    const ridesInfo = user.rides
+      ? await Promise.all(
+          user.rides.map(async (rideId) => {
+            const rideData = await ridesModel.getRideById(rideId);
+            return { rideId: rideId, ...rideData };
+          })
+        )
+      : [];
+
+    return ridesInfo;
+  }
   static async postUser(userData, photo) {
     await uniqueUser(userData.id, userData.email);
     await saveUserInFirestore(userData, photo);

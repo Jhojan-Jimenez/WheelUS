@@ -1,5 +1,6 @@
 import { db } from '../config/database.js';
 import { savePhotoInStorage } from '../lib/utils.js';
+import ridesModel from './rides.js';
 import usersModel from './users.js';
 import admin from 'firebase-admin';
 class vehiclesModel {
@@ -55,15 +56,26 @@ class vehiclesModel {
     const vehicleRef = db.collection('vehicles').doc(plate);
     const vehicleData = (await vehicleRef.get()).data();
     if (vehicleData.rides && vehicleData.rides.length > 0) {
-      throw new Error(
-        'VehicleHaveActiveRides'
-      );
+      throw new Error('VehicleHaveActiveRides');
     }
     const userRef = db.collection('users').doc(vehicleData.id_driver);
     await vehicleRef.delete();
     await userRef.update({
       vehicle_plate: admin.firestore.FieldValue.delete(),
     });
+  }
+  static async getVehicleRides(plate) {
+    const vehicle = await this.getVehicleByPlate(plate);
+    const ridesInfo = vehicle.rides
+      ? await Promise.all(
+          vehicle.rides.map(async (rideId) => {
+            const rideData = await ridesModel.getRideById(rideId);
+            return { rideId: rideId, ...rideData };
+          })
+        )
+      : [];
+
+    return ridesInfo;
   }
 }
 async function uniqueVehicle(vehicleData) {
