@@ -40,7 +40,17 @@ class rideController {
   static async deleteRide(req, res, next) {
     try {
       const { id } = req.params;
+      await ridesModel.deleteRide(id);
+      res.status(200).json({
+        message: 'Ride eliminado correctamente',
+      });
     } catch (error) {
+      if (error.message === 'RideHaveActivePassengers') {
+        return res.status(409).json({
+          message:
+            'El ride no puede eliminarse porque tiene pasajeros asociados',
+        });
+      }
       next(error);
     }
   }
@@ -53,12 +63,20 @@ class rideController {
   }
   static async startRoutes(req, res, next) {
     try {
+      const origins = await ridesModel.getStartingPoints();
+      res.status(200).json({
+        origins: origins,
+      });
     } catch (error) {
       next(error);
     }
   }
   static async endRoutes(req, res, next) {
     try {
+      const destinations = await ridesModel.getEndingPoints();
+      res.status(200).json({
+        destinations: destinations,
+      });
     } catch (error) {
       next(error);
     }

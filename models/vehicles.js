@@ -51,6 +51,20 @@ class vehiclesModel {
 
     await vehicleRef.update(updateData);
   }
+  static async deleteVehicle(plate) {
+    const vehicleRef = db.collection('vehicles').doc(plate);
+    const vehicleData = (await vehicleRef.get()).data();
+    if (vehicleData.rides && vehicleData.rides.length > 0) {
+      throw new Error(
+        'VehicleHaveActiveRides'
+      );
+    }
+    const userRef = db.collection('users').doc(vehicleData.id_driver);
+    await vehicleRef.delete();
+    await userRef.update({
+      vehicle_plate: admin.firestore.FieldValue.delete(),
+    });
+  }
 }
 async function uniqueVehicle(vehicleData) {
   const snapshot = await db.collection('vehicles').doc(vehicleData.plate).get();
@@ -62,7 +76,6 @@ async function uniqueVehicle(vehicleData) {
     .doc(vehicleData.id_driver)
     .get();
   if (!snapshot2.exists) {
-    d;
     throw new Error('DriverNotFound');
   }
   const snapshot3 = await db

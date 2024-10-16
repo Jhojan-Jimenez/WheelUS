@@ -3,16 +3,12 @@ import admin from 'firebase-admin';
 import vehiclesModel from './vehicles.js';
 class ridesModel {
   static async getAllRides() {
-    try {
-      const snapshot = await db.collection('rides').get();
-      const rides = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      return rides;
-    } catch (error) {
-      console.error('Error obteniendo rides:', error);
-    }
+    const snapshot = await db.collection('rides').get();
+    const rides = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    return rides;
   }
   static async getRideById(id) {
     const ride = await db.collection('rides').doc(id).get();
@@ -37,6 +33,28 @@ class ridesModel {
       passengers: admin.firestore.FieldValue.arrayUnion(userId),
       available_seats: available_seats - 1,
     });
+  }
+  static async deleteRide(id) {
+    const rideRef = db.collection('rides').doc(id);
+    const rideData = (await rideRef.get()).data();
+    if (rideData.passengers && rideData.passengers.length > 0) {
+      throw new Error('RideHaveActivePassengers');
+    }
+    const userRef = db.collection('users').doc(vehicleData.id_driver);
+    await vehicleRef.delete();
+    await userRef.update({
+      vehicle_plate: admin.firestore.FieldValue.delete(),
+    });
+  }
+  static async getStartingPoints() {
+    const snapshot = await db.collection('rides').get();
+    const points = snapshot.docs.map((doc) => doc.data().origin);
+    return points;
+  }
+  static async getEndingPoints() {
+    const snapshot = await db.collection('rides').get();
+    const points = snapshot.docs.map((doc) => doc.data().destination);
+    return points;
   }
 }
 

@@ -118,7 +118,17 @@ class vehicleController {
   static async deleteVehicle(req, res, next) {
     try {
       const { plate } = req.params;
+      await vehiclesModel.deleteVehicle(plate);
+      res.status(200).json({
+        message: 'Vehiculo eliminado correctamente',
+      });
     } catch (error) {
+      if (error.message === 'VehicleHaveActiveRides') {
+        return res.status(409).json({
+          message:
+            'El vehículo no puede eliminarse porque tiene viajes asociados.',
+        });
+      }
       next(error);
     }
   }
