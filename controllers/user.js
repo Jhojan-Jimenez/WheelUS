@@ -17,7 +17,7 @@ class userController {
         process.env.ACCESS_TOKEN_SECRET
       );
       const user = await usersModel.getUserById(id);
-      res.status(200).json({ user: user });
+      res.status(200).json({ user: { ...user, id: id } });
     } catch (error) {
       next(error);
     }
