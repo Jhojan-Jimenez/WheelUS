@@ -44,6 +44,7 @@ class vehicleController {
           : null;
       const soat =
         photos.soat && photos.soat.length > 0 ? photos.soat[0] : null;
+      console.log(soat, vehiclePhoto);
 
       const validData = vehicleSchema.safeParse({
         ...vehicleData,
@@ -135,7 +136,7 @@ class vehicleController {
   static async getVehicleRides(req, res, next) {
     try {
       const { plate } = req.params;
-      const vehicleRides = await vehiclesModel.getVehicleRides(plate)
+      const vehicleRides = await vehiclesModel.getVehicleRides(plate);
       res.status(200).json({ vehicleRides: vehicleRides });
     } catch (error) {
       if (error.message === 'RideNotFound') {
