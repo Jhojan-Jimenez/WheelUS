@@ -2,6 +2,7 @@ import { db } from '../config/database.js';
 import admin from 'firebase-admin';
 import vehiclesModel from './vehicles.js';
 import { obtainLocalTime } from '../lib/utils.js';
+import { differenceInMinutes } from 'date-fns';
 class ridesModel {
   static async getAllRides() {
     const snapshot = await db.collection('rides').get();
@@ -38,7 +39,10 @@ class ridesModel {
   static async deleteRide(id) {
     const rideRef = db.collection('rides').doc(id);
     const rideData = (await rideRef.get()).data();
-    if ((new Date(rideData.departure) - obtainLocalTime()) / (1000 * 60) < 30) {
+
+    if (
+      differenceInMinutes(new Date(rideData.departure), obtainLocalTime()) < 30
+    ) {
       throw new Error('RideHaveActivePassengers');
     }
     if (rideData.passengers && rideData.passengers.length > 0) {
