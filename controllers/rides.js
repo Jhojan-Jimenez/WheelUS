@@ -48,7 +48,7 @@ class rideController {
       if (error.message === 'RideHaveActivePassengers') {
         return res.status(409).json({
           message:
-            'El ride no puede eliminarse porque tiene pasajeros asociados',
+            'El ride no puede eliminarse con menos de 30 minutos de antelación ',
         });
       }
       next(error);

@@ -1,6 +1,7 @@
 import { db } from '../config/database.js';
 import admin from 'firebase-admin';
 import vehiclesModel from './vehicles.js';
+import { obtainLocalTime } from '../lib/utils.js';
 class ridesModel {
   static async getAllRides() {
     const snapshot = await db.collection('rides').get();
@@ -37,14 +38,22 @@ class ridesModel {
   static async deleteRide(id) {
     const rideRef = db.collection('rides').doc(id);
     const rideData = (await rideRef.get()).data();
-    if (rideData.passengers && rideData.passengers.length > 0) {
+    if ((new Date(rideData.departure) - obtainLocalTime()) / (1000 * 60) < 30) {
       throw new Error('RideHaveActivePassengers');
     }
-    const userRef = db.collection('users').doc(vehicleData.id_driver);
-    await vehicleRef.delete();
-    await userRef.update({
-      vehicle_plate: admin.firestore.FieldValue.delete(),
+    if (rideData.passengers && rideData.passengers.length > 0) {
+      rideData.passengers.forEach(async (passenger) => {
+        const userRef = db.collection('users').doc(passenger);
+        await userRef.update({
+          rides: admin.firestore.FieldValue.arrayRemove(id),
+        });
+      });
+    }
+    const vehicleRef = db.collection('vehicles').doc(rideData.vehicle_plate);
+    await vehicleRef.update({
+      rides: admin.firestore.FieldValue.arrayRemove(id),
     });
+    await rideRef.delete();
   }
   static async getStartingPoints() {
     const snapshot = await db.collection('rides').get();

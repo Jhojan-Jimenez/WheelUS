@@ -51,7 +51,7 @@ class authController {
 }
 function createToken(id) {
   return sign({ id: id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: '1h',
+    expiresIn: '1d',
   });
 }
 
