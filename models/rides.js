@@ -4,14 +4,29 @@ import vehiclesModel from './vehicles.js';
 import { obtainLocalTime } from '../lib/utils.js';
 import { differenceInMinutes } from 'date-fns';
 class ridesModel {
-  static async getAllRides() {
+  static async getAllRides(queryParams) {
     const snapshot = await db.collection('rides').get();
     const rides = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
-    return rides;
+
+    const filteredRides = rides.filter((ride) => {
+      const { origin, destination, seats } = queryParams;
+
+      if (origin && ride.route[0] !== origin) return false;
+
+      if (destination && ride.route[ride.route.length - 1] !== destination)
+        return false;
+
+      if (seats && ride.available_seats < seats) return false;
+
+      return true;
+    });
+
+    return filteredRides;
   }
+
   static async getRideById(id) {
     const ride = await db.collection('rides').doc(id).get();
     if (!ride.exists) {

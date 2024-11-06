@@ -4,8 +4,21 @@ import ridesModel from '../models/rides.js';
 
 class rideController {
   static async getRides(req, res, next) {
+    const allowedQueryParams = ['origin', 'destination', 'seats'];
     try {
-      const rides = await ridesModel.getAllRides();
+      const queryParams = req.query;
+      const queryParamsKeys = Object.keys(queryParams);
+
+      const isValid = queryParamsKeys.every((param) =>
+        allowedQueryParams.includes(param)
+      );
+
+      if (!isValid) {
+        return res.status(400).json({ error: 'Invalid query parameters' });
+      }
+
+      const rides = await ridesModel.getAllRides(queryParams);
+
       res.status(200).json({ rides: rides });
     } catch (error) {
       next(error);
