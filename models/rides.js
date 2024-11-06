@@ -11,12 +11,26 @@ class ridesModel {
       ...doc.data(),
     }));
 
+    await Promise.all(
+      rides.map(async (ride) => {
+        if (
+          differenceInMinutes(new Date(ride.departure), obtainLocalTime()) < 0
+        ) {
+          const rideRef = db.collection('rides').doc(ride.id);
+          await rideRef.update({ isActive: false });
+          ride.isActive = false;
+        }
+      })
+    );
+
     const filteredRides = rides.filter((ride) => {
       const { origin, destination, seats } = queryParams;
 
-      if (origin && ride.route[0] !== origin) return false;
+      if (!ride.isActive) return false;
 
-      if (destination && ride.route[ride.route.length - 1] !== destination)
+      if (origin && ride.origin !== origin) return false;
+
+      if (destination && ride.destination !== destination)
         return false;
 
       if (seats && ride.available_seats < seats) return false;
