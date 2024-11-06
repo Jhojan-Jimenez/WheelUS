@@ -53,12 +53,24 @@ class usersModel {
       vehicle_plate: plate,
     });
   }
-  static async patchUserRides(id, rideId) {
+  static async patchUserRides(id, { rideId, arrivalPoints }) {
     await ridesModel.getRideById(rideId);
     const userRef = db.collection('users').doc(id);
+    const rideRef = db.collection('rides').doc(rideId);
+    const available_seats = (await rideRef.get()).data().available_seats;
+    if (available_seats < arrivalPoints.length) {
+      throw new Error('NotEnoughSeats');
+    }
 
-    await userRef.update({
-      rides: admin.firestore.FieldValue.arrayUnion(rideId),
+    await rideRef.update({
+      available_seats: admin.firestore.FieldValue.increment(
+        -arrivalPoints.length + 1
+      ),
+    });
+    arrivalPoints.forEach(async (point) => {
+      await userRef.update({
+        rides: admin.firestore.FieldValue.arrayUnion({ rideId, point }),
+      });
     });
     await ridesModel.patchRidePassengers(rideId, id);
   }
@@ -66,7 +78,7 @@ class usersModel {
     const user = await this.getUserById(id);
     const ridesInfo = user.rides
       ? await Promise.all(
-          user.rides.map(async (rideId) => {
+          user.rides.map(async ({ rideId, arrivalPoints }) => {
             const rideData = await ridesModel.getRideById(rideId);
             return { rideId: rideId, ...rideData };
           })

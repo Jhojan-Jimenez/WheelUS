@@ -50,14 +50,18 @@ class userController {
   static async patchUserRides(req, res, next) {
     try {
       const { id } = req.params;
-      const { rideId } = req.body;
-      await usersModel.patchUserRides(id, rideId);
+      const { rideId, arrivalPoints } = req.body;
+      await usersModel.patchUserRides(id, { rideId, arrivalPoints });
       res.status(200).json({ message: 'Viaje agendado correctamente' });
     } catch (error) {
       if (error.message === 'RideNotFound') {
         return res
           .status(404)
           .json({ message: 'No existe o no esta activo dicho wheels' });
+      }else if( error.message === 'NotEnoughSeats'){
+        return res
+          .status(400)
+          .json({ message: 'No hay suficientes asientos disponibles' });
       }
       next(error);
     }

@@ -48,9 +48,21 @@ class ridesModel {
     if (rideData.passengers && rideData.passengers.length > 0) {
       rideData.passengers.forEach(async (passenger) => {
         const userRef = db.collection('users').doc(passenger);
-        await userRef.update({
-          rides: admin.firestore.FieldValue.arrayRemove(id),
-        });
+
+        // Obtiene el documento del usuario
+        const userDoc = await userRef.get();
+
+        if (userDoc.exists) {
+          // Filtramos el arreglo 'rides' para eliminar el objeto con rideId == id
+          const updatedRides = (userDoc.data().rides || []).filter(
+            (ride) => ride.rideId !== id
+          );
+
+          // Actualizamos el campo 'rides' con el nuevo arreglo
+          await userRef.update({
+            rides: updatedRides,
+          });
+        }
       });
     }
     const vehicleRef = db.collection('vehicles').doc(rideData.vehicle_plate);
