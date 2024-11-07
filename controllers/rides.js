@@ -40,6 +40,10 @@ class rideController {
         return res
           .status(400)
           .json({ message: 'No existe un vehiculo con esa placa' });
+      } else if (error.message === 'NotEnoughSeats') {
+        return res
+          .status(409)
+          .json({ message: 'No tienes suficientes asientos en tu carro' });
       }
 
       next(error);
@@ -70,6 +74,8 @@ class rideController {
   static async recommendedFee(req, res, next) {
     try {
       const { startPoint, endPoint } = req.query;
+      const fee = await ridesModel.getRecommendedFee(startPoint, endPoint);
+      res.status(200).json({recommendedFee:fee});
     } catch (error) {
       next(error);
     }

@@ -1,8 +1,7 @@
 import { db } from '../config/database.js';
 import admin from 'firebase-admin';
 import vehiclesModel from './vehicles.js';
-import { obtainLocalTime } from '../lib/utils.js';
-import { differenceInMinutes } from 'date-fns';
+import { differenceBetweenHours } from '../lib/utils.js';
 class ridesModel {
   static async getAllRides(queryParams) {
     const snapshot = await db.collection('rides').get();
@@ -13,9 +12,7 @@ class ridesModel {
 
     await Promise.all(
       rides.map(async (ride) => {
-        if (
-          differenceInMinutes(new Date(ride.departure), obtainLocalTime()) < 0
-        ) {
+        if (differenceBetweenHours(ride.departure) < 0) {
           const rideRef = db.collection('rides').doc(ride.id);
           await rideRef.update({ isActive: false });
           ride.isActive = false;
@@ -30,8 +27,7 @@ class ridesModel {
 
       if (origin && ride.origin !== origin) return false;
 
-      if (destination && ride.destination !== destination)
-        return false;
+      if (destination && ride.destination !== destination) return false;
 
       if (seats && ride.available_seats < seats) return false;
 
@@ -43,13 +39,23 @@ class ridesModel {
 
   static async getRideById(id) {
     const ride = await db.collection('rides').doc(id).get();
+    if (differenceBetweenHours(ride.data().departure) < 0) {
+      const rideRef = db.collection('rides').doc(ride.id);
+      await rideRef.update({ isActive: false });
+      return (await rideRef.get()).data();
+    }
     if (!ride.exists) {
       throw new Error('RideNotFound');
     }
     return ride.data();
   }
   static async createRide(rideData) {
-    await vehiclesModel.getVehicleByPlate(rideData.vehicle_plate);
+    const vehicle = await vehiclesModel.getVehicleByPlate(
+      rideData.vehicle_plate
+    );
+    if (vehicle.seats < rideData.available_seats) {
+      throw new Error('NotEnoughSeats');
+    }
     const ride = await db
       .collection('rides')
       .add({ ...rideData, isActive: true, passengers: [] });
@@ -69,25 +75,19 @@ class ridesModel {
     const rideRef = db.collection('rides').doc(id);
     const rideData = (await rideRef.get()).data();
 
-    if (
-      differenceInMinutes(new Date(rideData.departure), obtainLocalTime()) < 30
-    ) {
+    if (differenceBetweenHours(rideData.departure) < 30) {
       throw new Error('RideHaveActivePassengers');
     }
     if (rideData.passengers && rideData.passengers.length > 0) {
       rideData.passengers.forEach(async (passenger) => {
         const userRef = db.collection('users').doc(passenger);
 
-        // Obtiene el documento del usuario
         const userDoc = await userRef.get();
 
         if (userDoc.exists) {
-          // Filtramos el arreglo 'rides' para eliminar el objeto con rideId == id
           const updatedRides = (userDoc.data().rides || []).filter(
             (ride) => ride.rideId !== id
           );
-
-          // Actualizamos el campo 'rides' con el nuevo arreglo
           await userRef.update({
             rides: updatedRides,
           });
@@ -99,6 +99,20 @@ class ridesModel {
       rides: admin.firestore.FieldValue.arrayRemove(id),
     });
     await rideRef.delete();
+  }
+  static async getRecommendedFee(start, end) {
+    const snapshot = await db.collection('rides').get();
+    const similarRides = snapshot.docs.filter(
+      (doc) => doc.data().origin === start && doc.data().destination === end
+    );
+    if (similarRides.length > 0) {
+      const fee =
+        similarRides.reduce((acc, doc) => acc + doc.data().fee, 0) /
+        similarRides.length;
+      return fee;
+    } else {
+      return 5000;
+    }
   }
   static async getStartingPoints() {
     const snapshot = await db.collection('rides').get();
