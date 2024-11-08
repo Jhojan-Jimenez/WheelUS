@@ -77,14 +77,12 @@ class usersModel {
   static async getUserRides(id) {
     const user = await this.getUserById(id);
     const ridesInfo = user.rides
-      ? (
-          await Promise.all(
-            user.rides.map(async ({ rideId, arrivalPoints }) => {
-              const rideData = await ridesModel.getRideById(rideId);
-              return rideData.isActive ? { rideId, ...rideData } : undefined;
-            })
-          )
-        ).filter(Boolean)
+      ? await Promise.all(
+          user.rides.map(async ({ rideId, arrivalPoints }) => {
+            const rideData = await ridesModel.getRideById(rideId);
+            return rideData.isActive ? { rideId, ...rideData } : null;
+          })
+        ).then((rides) => rides.filter(Boolean))
       : [];
 
     return ridesInfo;
