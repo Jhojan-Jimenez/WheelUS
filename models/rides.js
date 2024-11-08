@@ -115,14 +115,15 @@ class ridesModel {
     }
   }
   static async getStartingPoints() {
-    const snapshot = await db.collection('rides').get();
-    const points = snapshot.docs.map((doc) => doc.data().origin);
+    const allRides = await this.getAllRides({});
+    const points = allRides.map((doc) => doc.origin);
+
     const uniquePoints = [...new Set(points)];
     return uniquePoints;
   }
   static async getEndingPoints() {
-    const snapshot = await db.collection('rides').get();
-    const points = snapshot.docs.map((doc) => doc.data().destination);
+    const allRides = await this.getAllRides({});
+    const points = allRides.map((doc) => doc.destination);
     const uniquePoints = [...new Set(points)];
     return uniquePoints;
   }
