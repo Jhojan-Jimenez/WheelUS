@@ -66,10 +66,11 @@ class vehiclesModel {
   }
   static async getVehicleRides(plate) {
     const vehicle = await this.getVehicleByPlate(plate);
+
     const ridesInfo = vehicle.rides
       ? await Promise.all(
           vehicle.rides
-            .map(async ({ rideId, arrivalPoints }) => {
+            .map(async (rideId) => {
               const rideData = await ridesModel.getRideById(rideId);
               return rideData.isActive
                 ? { rideId: rideId, ...rideData }
