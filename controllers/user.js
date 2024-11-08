@@ -58,7 +58,7 @@ class userController {
         return res
           .status(404)
           .json({ message: 'No existe o no esta activo dicho wheels' });
-      }else if( error.message === 'NotEnoughSeats'){
+      } else if (error.message === 'NotEnoughSeats') {
         return res
           .status(400)
           .json({ message: 'No hay suficientes asientos disponibles' });
@@ -76,6 +76,21 @@ class userController {
         return res
           .status(404)
           .json({ message: 'No existe o no esta activo dicho wheels' });
+      }
+      next(error);
+    }
+  }
+  static async deleteUserRide(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { point, rideId } = req.query;
+      await usersModel.deleteUserRide({ userId: id, rideId, point });
+      res.status(200).json({ message: 'Viaje eliminado correctamente' });
+    } catch (error) {
+      if (error.message === 'UserRideNotFound') {
+        return res
+          .status(404)
+          .json({ message: 'Este usuario no tiene este ride como reserva' });
       }
       next(error);
     }
