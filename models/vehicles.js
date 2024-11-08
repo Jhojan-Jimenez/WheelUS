@@ -69,16 +69,15 @@ class vehiclesModel {
 
     const ridesInfo = vehicle.rides
       ? await Promise.all(
-          vehicle.rides
-            .map(async (rideId) => {
-              const rideData = await ridesModel.getRideById(rideId);
-              return rideData.isActive
-                ? { rideId: rideId, ...rideData }
-                : undefined;
-            })
-            .filter(Boolean)
-        )
+          vehicle.rides.map(async (rideId) => {
+            const rideData = await ridesModel.getRideById(rideId);
+            if (!rideData.isActive) return null;
+            return { rideId, ...rideData };
+          })
+        ).then((rides) => rides.filter(Boolean))
       : [];
+
+    console.log(ridesInfo);
 
     return ridesInfo;
   }
