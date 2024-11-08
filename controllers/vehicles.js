@@ -139,6 +139,8 @@ class vehicleController {
       const vehicleRides = await vehiclesModel.getVehicleRides(plate);
       res.status(200).json({ vehicleRides: vehicleRides });
     } catch (error) {
+      console.log(error);
+      
       if (error.message === 'RideNotFound') {
         return res
           .status(404)
