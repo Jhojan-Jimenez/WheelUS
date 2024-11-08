@@ -87,6 +87,26 @@ class usersModel {
 
     return ridesInfo;
   }
+  static async deleteUserRide({ userId, rideId, point }) {
+    const userRef = db.collection('users').doc(userId);
+    const userData = await this.getUserById(userId);
+    
+    const hasRide = userData.rides.some(
+      (ride) => ride.rideId === rideId && ride.point === point
+    );
+
+    if (!hasRide) {
+      throw new Error('UserRideNotFound');
+    }
+    await userRef.update({
+      rides: admin.firestore.FieldValue.arrayRemove({ rideId, point }),
+    });
+
+    const rideRef = db.collection('rides').doc(rideId);
+    await rideRef.update({
+      available_seats: admin.firestore.FieldValue.increment(1),
+    });
+  }
 
   static async postUser(userData, photo) {
     await uniqueUser(userData.id, userData.email);
