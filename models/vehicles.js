@@ -77,8 +77,6 @@ class vehiclesModel {
         ).then((rides) => rides.filter(Boolean))
       : [];
 
-    console.log(ridesInfo);
-
     return ridesInfo;
   }
 }

@@ -1,15 +1,17 @@
 import admin from 'firebase-admin';
 import { db } from '../config/database.js';
-import { savePhotoInStorage } from '../lib/utils.js';
+import { hashPassword, savePhotoInStorage } from '../lib/utils.js';
 import ridesModel from './rides.js';
 import vehiclesModel from './vehicles.js';
 import { UserNotFoundError } from '../errors/CustomErrors.js';
 class usersModel {
   static async existUser({ email, password }) {
+    const hashedPassword = hashPassword(password);
+    
     const user = await db
       .collection('users')
       .where('email', '==', email)
-      .where('password', '==', password)
+      .where('password', '==', hashedPassword)
       .get();
     if (user.empty) {
       throw new Error('UserNotFound');
@@ -90,7 +92,7 @@ class usersModel {
   static async deleteUserRide({ userId, rideId, point }) {
     const userRef = db.collection('users').doc(userId);
     const userData = await this.getUserById(userId);
-    
+
     const hasRide = userData.rides.some(
       (ride) => ride.rideId === rideId && ride.point === point
     );
@@ -134,6 +136,7 @@ async function saveUserInFirestore(userData, photo) {
   if (photo) {
     photoUrl = await savePhotoInStorage(photo);
   }
+  const hashedPassword = hashPassword(password);
   await db
     .collection('users')
     .doc(id)
@@ -142,7 +145,7 @@ async function saveUserInFirestore(userData, photo) {
       lastname,
       contact,
       email,
-      password,
+      password: hashedPassword,
       photo: photoUrl || null,
     });
 }
