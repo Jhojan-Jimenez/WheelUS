@@ -6,9 +6,8 @@ class rideController {
   static async getRides(req, res, next) {
     const allowedQueryParams = ['origin', 'destination', 'seats'];
     try {
-      const queryParams = req.query;
+      const queryParams = req.body;
       const queryParamsKeys = Object.keys(queryParams);
-
       const isValid = queryParamsKeys.every((param) =>
         allowedQueryParams.includes(param)
       );
@@ -16,7 +15,6 @@ class rideController {
       if (!isValid) {
         return res.status(400).json({ error: 'Invalid query parameters' });
       }
-
       const rides = await ridesModel.getAllRides(queryParams);
 
       res.status(200).json({ rides: rides });
@@ -75,7 +73,7 @@ class rideController {
     try {
       const { startPoint, endPoint } = req.query;
       const fee = await ridesModel.getRecommendedFee(startPoint, endPoint);
-      res.status(200).json({recommendedFee:fee});
+      res.status(200).json({ recommendedFee: fee });
     } catch (error) {
       next(error);
     }
