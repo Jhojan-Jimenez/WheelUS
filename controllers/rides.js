@@ -1,5 +1,5 @@
 import { validationErrors } from '../errors/CustomErrors.js';
-import { formatZodErrors, rideSchema } from '../lib/validators.js';
+import { rideSchema } from '../lib/validators.js';
 import ridesModel from '../models/rides.js';
 
 class rideController {
