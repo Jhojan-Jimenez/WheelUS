@@ -27,7 +27,13 @@ class ridesModel {
 
       if (origin && ride.origin !== origin) return false;
 
-      if (destination && ride.destination !== destination) return false;
+      if (
+        destination &&
+        !ride.route.some(() => {
+          return ride.route.includes(destination);
+        })
+      )
+        return false;
 
       if (seats && ride.available_seats < seats) return false;
 
