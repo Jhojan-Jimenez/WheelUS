@@ -97,7 +97,12 @@ class userController {
   }
   static async getUserNotifications(req, res, next) {
     try {
-      const { id } = req.params;
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+      const { id } = jsonwebtoken.verify(
+        token,
+        process.env.ACCESS_TOKEN_SECRET
+      );
       const notifications = await usersModel.userNotifications(id);
       res.status(200).json({ notifications: notifications });
     } catch (error) {
@@ -107,4 +112,3 @@ class userController {
 }
 
 export default userController;
-  
