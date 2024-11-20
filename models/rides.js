@@ -129,7 +129,7 @@ class ridesModel {
   }
   static async getEndingPoints() {
     const allRides = await this.getAllRides({});
-    const points = allRides.map((doc) => doc.destination);
+    const points = allRides.flatMap((doc) => doc.route.slice(1));
     const uniquePoints = [...new Set(points)];
     return uniquePoints;
   }
