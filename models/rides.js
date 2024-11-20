@@ -96,6 +96,9 @@ class ridesModel {
           );
           await userRef.update({
             rides: updatedRides,
+            notifications: admin.firestore.FieldValue.arrayUnion(
+              `Tu viaje de ${rideData.origin} a ${rideData.destination} ha sido cancelado`
+            ),
           });
         }
       });

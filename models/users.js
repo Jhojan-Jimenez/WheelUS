@@ -7,7 +7,7 @@ import { UserNotFoundError } from '../errors/CustomErrors.js';
 class usersModel {
   static async existUser({ email, password }) {
     const hashedPassword = hashPassword(password);
-    
+
     const user = await db
       .collection('users')
       .where('email', '==', email)
@@ -36,6 +36,13 @@ class usersModel {
     const { password, ...userData } = user.docs[0].data();
     return userData;
   }
+  static async userNotifications(id) {
+    const user = await this.getUserById(id);
+    if (!user.notifications) {
+      return [];
+    }
+    return user.notifications;
+  }
   static async patchUser(id, newData) {
     const userRef = db.collection('users').doc(id);
     const updateData = { ...newData };
@@ -56,9 +63,12 @@ class usersModel {
     });
   }
   static async patchUserRides(id, { rideId, arrivalPoints }) {
-    await ridesModel.getRideById(rideId);
+    const ride = await ridesModel.getRideById(rideId);
+    const vehicle = await vehiclesModel.getVehicleByPlate(ride.vehicle_plate);
+    const user = await this.getUserById(id);
     const userRef = db.collection('users').doc(id);
     const rideRef = db.collection('rides').doc(rideId);
+    const driverRef = db.collection('users').doc(vehicle.id_driver);
     const available_seats = (await rideRef.get()).data().available_seats;
     if (available_seats < arrivalPoints.length) {
       throw new Error('NotEnoughSeats');
@@ -73,6 +83,11 @@ class usersModel {
       await userRef.update({
         rides: admin.firestore.FieldValue.arrayUnion({ rideId, point }),
       });
+    });
+    driverRef.update({
+      notifications: admin.firestore.FieldValue.arrayUnion(
+        `${user.name} ${user.lastname} se ha unido a tu ride`
+      ),
     });
     await ridesModel.patchRidePassengers(rideId, id);
   }
@@ -90,7 +105,11 @@ class usersModel {
     return ridesInfo;
   }
   static async deleteUserRide({ userId, rideId, point }) {
+    const ride = await ridesModel.getRideById(rideId);
+    const vehicle = await vehiclesModel.getVehicleByPlate(ride.vehicle_plate);
     const userRef = db.collection('users').doc(userId);
+    const rideRef = db.collection('rides').doc(rideId);
+    const driverRef = db.collection('users').doc(vehicle.id_driver);
     const userData = await this.getUserById(userId);
 
     const hasRide = userData.rides.some(
@@ -103,8 +122,13 @@ class usersModel {
     await userRef.update({
       rides: admin.firestore.FieldValue.arrayRemove({ rideId, point }),
     });
+    const user = await this.getUserById(userId);
+    driverRef.update({
+      notifications: admin.firestore.FieldValue.arrayUnion(
+        `${user.name} ${user.lastname} abandono tu ride`
+      ),
+    });
 
-    const rideRef = db.collection('rides').doc(rideId);
     await rideRef.update({
       available_seats: admin.firestore.FieldValue.increment(1),
     });
