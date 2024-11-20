@@ -41,6 +41,10 @@ class usersModel {
     if (!user.notifications) {
       return [];
     }
+    const userRef = db.collection('users').doc(id);
+    await userRef.update({
+      notifications: [],
+    });
     return user.notifications;
   }
   static async patchUser(id, newData) {
