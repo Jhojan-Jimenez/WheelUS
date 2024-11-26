@@ -37,9 +37,11 @@ class authController {
       if (isValid !== true) return;
       await usersModel.postUser(authData, photo);
       const token = createToken(authData.id);
+      const refreshToken = createRefreshToken(userId);
       res.status(200).json({
         message: 'Usuario correctamente registrado',
-        accessToken: token,
+        authToken,
+        refreshToken,
       });
     } catch (error) {
       if (error.message === 'EmailAlreadyExists') {
