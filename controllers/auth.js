@@ -1,7 +1,11 @@
-import sign from 'jsonwebtoken/sign.js';
 import { userRegSchema } from '../lib/validators.js';
 import usersModel from '../models/users.js';
 import { validationErrors } from '../errors/CustomErrors.js';
+import {
+  createAuthToken,
+  createRefreshToken,
+  verifyRefreshToken,
+} from '../lib/utils.js';
 
 class authController {
   static async login(req, res, next) {
@@ -9,8 +13,11 @@ class authController {
       const authData = req.body;
       const user = await usersModel.existUser(authData);
       const userId = user.docs[0].id;
-      const token = createToken(userId);
-      res.status(200).json({ message: 'Login exitoso', accessToken: token });
+      const authToken = createAuthToken(userId);
+      const refreshToken = createRefreshToken(userId);
+      res
+        .status(200)
+        .json({ message: 'Login exitoso', authToken, refreshToken });
     } catch (error) {
       if (error.message === 'UserNotFound') {
         return res
@@ -48,11 +55,19 @@ class authController {
       next(error);
     }
   }
-}
-function createToken(id) {
-  return sign({ id: id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: '1d',
-  });
+  static async refreshToken(req, res, next) {
+    try {
+      const { refreshToken } = req.body;
+      const userId = verifyRefreshToken(refreshToken);
+      const authToken = createAuthToken(userId);
+      res.status(200).json({ authToken });
+    } catch (error) {
+      if (error.message === 'InvalidRefreshToken') {
+        return res.status(401).json({ message: 'Refresh token inválido' });
+      }
+      next(error);
+    }
+  }
 }
 
 export default authController;
