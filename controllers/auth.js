@@ -36,7 +36,7 @@ class authController {
       const isValid = validationErrors(validData, res);
       if (isValid !== true) return;
       await usersModel.postUser(authData, photo);
-      const token = createToken(authData.id);
+      const authToken = createToken(authData.id);
       const refreshToken = createRefreshToken(userId);
       res.status(200).json({
         message: 'Usuario correctamente registrado',
