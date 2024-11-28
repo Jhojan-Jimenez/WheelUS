@@ -2,6 +2,7 @@ import { db } from '../config/database.js';
 import admin from 'firebase-admin';
 import vehiclesModel from './vehicles.js';
 import { differenceBetweenHours } from '../lib/utils.js';
+import { addNotification } from './notifications.js';
 class ridesModel {
   static async getAllRides(queryParams) {
     const snapshot = await db.collection('rides').get();
@@ -96,10 +97,13 @@ class ridesModel {
           );
           await userRef.update({
             rides: updatedRides,
-            notifications: admin.firestore.FieldValue.arrayUnion(
-              `Tu viaje de ${rideData.origin} a ${rideData.destination} ha sido cancelado`
-            ),
           });
+          await addNotification(
+            userRef,
+            'ride',
+            `Tu viaje de ${rideData.origin} a ${rideData.destination} ha sido cancelado`,
+            obtainLocalTime()
+          );
         }
       });
     }

@@ -10,7 +10,11 @@ export function authCookieJWT(req, res, next) {
         .status(403)
         .json({ message: 'You are not authorized, do not have token' });
     } else {
-      jsonwebtoken.verify(token, process.env.ACCESS_TOKEN_SECRET);
+      const { id } = jsonwebtoken.verify(
+        token,
+        process.env.ACCESS_TOKEN_SECRET
+      );
+      req.userId = id;
       next();
     }
   } catch (err) {

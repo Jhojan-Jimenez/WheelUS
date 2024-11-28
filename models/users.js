@@ -1,9 +1,10 @@
 import admin from 'firebase-admin';
 import { db } from '../config/database.js';
-import { hashPassword, savePhotoInStorage } from '../lib/utils.js';
+import { hashPassword, obtainLocalTime, savePhotoInStorage } from '../lib/utils.js';
 import ridesModel from './rides.js';
 import vehiclesModel from './vehicles.js';
 import { UserNotFoundError } from '../errors/CustomErrors.js';
+import { addNotification } from './notifications.js';
 class usersModel {
   static async existUser({ email, password }) {
     const hashedPassword = hashPassword(password);
@@ -88,11 +89,12 @@ class usersModel {
         rides: admin.firestore.FieldValue.arrayUnion({ rideId, point }),
       });
     });
-    driverRef.update({
-      notifications: admin.firestore.FieldValue.arrayUnion(
-        `${user.name} ${user.lastname} se ha unido a tu ride`
-      ),
-    });
+    await addNotification(
+      driverRef,
+      'ride',
+      `${user.name} ${user.lastname} se ha unido a tu ride`,
+      obtainLocalTime()
+    );
     await ridesModel.patchRidePassengers(rideId, id);
   }
   static async getUserRides(id) {
@@ -127,11 +129,12 @@ class usersModel {
       rides: admin.firestore.FieldValue.arrayRemove({ rideId, point }),
     });
     const user = await this.getUserById(userId);
-    driverRef.update({
-      notifications: admin.firestore.FieldValue.arrayUnion(
-        `${user.name} ${user.lastname} abandono tu ride`
-      ),
-    });
+    await addNotification(
+      driverRef,
+      'ride',
+      `${user.name} ${user.lastname} abandono tu ride`,
+      obtainLocalTime()
+    );
 
     await rideRef.update({
       available_seats: admin.firestore.FieldValue.increment(1),

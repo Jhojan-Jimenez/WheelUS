@@ -16,7 +16,7 @@ export async function verifyVehiclePlate(req, res, next) {
         .status(404)
         .json({ message: 'No existe un vehiculo con esa placa' });
     }
-    next(error)
+    next(error);
   }
 }
 export async function verifyRideID(req, res, next) {
@@ -29,7 +29,7 @@ export async function verifyRideID(req, res, next) {
     if (error.message === 'RideNotFound') {
       return res.status(404).json({ message: 'No existe un ride con ese ID' });
     }
-    next(error)
+    next(error);
   }
 }
 export async function verifyUserID(req, res, next) {
@@ -45,6 +45,6 @@ export async function verifyUserID(req, res, next) {
         .status(404)
         .json({ message: 'No existe un usuario con ese ID' });
     }
-    next(error)
+    next(error);
   }
 }
