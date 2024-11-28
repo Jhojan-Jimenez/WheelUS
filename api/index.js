@@ -12,10 +12,18 @@ import chatRouter from '../routes/chats.js';
 
 const app = express();
 const httpServer = createServer(app);
+const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+console.log(allowedOrigins);
 
 export const io = new Server(httpServer, {
   cors: {
-    origin: ['http://127.0.0.1:5500', 'http://localhost:5173'],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('No autorizado por política CORS'));
+      }
+    },
     credentials: true,
   },
 });
@@ -24,7 +32,15 @@ initializeWebSockets(io);
 const port = 5000;
 app.use(
   cors({
-    origin: ['http://127.0.0.1:5500', 'http://localhost:5173'],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        // Permite solicitudes desde orígenes válidos o desde aplicaciones sin origen (e.g., Postman)
+        callback(null, true);
+      } else {
+        // Bloquea solicitudes desde orígenes no autorizados
+        callback(new Error('No autorizado por política CORS'));
+      }
+    },
     credentials: true,
   })
 );
