@@ -13,7 +13,6 @@ import chatRouter from '../routes/chats.js';
 const app = express();
 const httpServer = createServer(app);
 const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
-console.log(allowedOrigins);
 
 export const io = new Server(httpServer, {
   cors: {
