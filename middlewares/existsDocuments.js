@@ -34,7 +34,6 @@ export async function verifyRideID(req, res, next) {
 }
 export async function verifyUserID(req, res, next) {
   const { id } = req.params;
-
   try {
     const user = await usersModel.getUserById(id);
     req.user = user;

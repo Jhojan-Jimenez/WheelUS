@@ -69,15 +69,7 @@ class ridesModel {
     await vehiclesModel.addRideToVehicle(ride.id, rideData.vehicle_plate);
     return ride.id;
   }
-  static async patchRidePassengers(rideId, userId) {
-    const userRef = db.collection('rides').doc(rideId);
-    const { available_seats } = await ridesModel.getRideById(rideId);
 
-    await userRef.update({
-      passengers: admin.firestore.FieldValue.arrayUnion(userId),
-      available_seats: available_seats - 1,
-    });
-  }
   static async deleteRide(id) {
     const rideRef = db.collection('rides').doc(id);
     const rideData = (await rideRef.get()).data();

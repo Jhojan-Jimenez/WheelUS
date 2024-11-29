@@ -19,7 +19,11 @@ class vehiclesModel {
       vehiclePhoto,
       soat
     );
-    await usersModel.patchUserVehicle(vehicleData.id_driver, vehicleData.plate);
+    const userRef = db.collection('users').doc(id);
+
+    await userRef.update({
+      vehicle_plate: plate,
+    });
     return finalData;
   }
   static async getVehicleByPlate(plate) {

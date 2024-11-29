@@ -1,5 +1,4 @@
 import jsonwebtoken from 'jsonwebtoken';
-import chatModel from '../models/chats.js';
 
 const usersSockets = new Map();
 
@@ -42,7 +41,7 @@ export const initializeWebSockets = (io) => {
 
     socket.on('privateMessage', async ({ message }) => {
       const toUserId = message.receiverId;
-      
+
       console.log(
         `Mensaje privado de ${socket.userId} a ${toUserId}: ${message}`
       );
@@ -67,11 +66,18 @@ export const initializeWebSockets = (io) => {
   });
 };
 
-const sendMessageToUser = async (io, userId, message) => {
-
+const sendMessageToUser = async ( userId, message) => {
   const sockets = usersSockets.get(String(userId)) || [];
   sockets.forEach((socket) => {
     socket.emit('message', message);
-    socket.emit('notification', 'Tienes un nuevo mensaje');
+    socket.emit('chatNotification', 'Tienes un nuevo mensaje');
+  });
+};
+export const sendNotificationToUser = async ( userId, notification) => {
+  const sockets = usersSockets.get(String(userId)) || [];
+  console.log(`Enviando notificación a userId=${userId}: ${notification}`);
+  
+  sockets.forEach((socket) => {
+    socket.emit('notification', notification);
   });
 };

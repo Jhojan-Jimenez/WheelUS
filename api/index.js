@@ -26,6 +26,7 @@ export const io = new Server(httpServer, {
     credentials: true,
   },
 });
+
 initializeWebSockets(io);
 
 const port = 5000;
@@ -33,10 +34,8 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
-        // Permite solicitudes desde orígenes válidos o desde aplicaciones sin origen (e.g., Postman)
         callback(null, true);
       } else {
-        // Bloquea solicitudes desde orígenes no autorizados
         callback(new Error('No autorizado por política CORS'));
       }
     },
@@ -54,8 +53,8 @@ app.use('/chat', authCookieJWT, chatRouter);
 app.use((req, res) => {
   res.status(404).json({ message: 'Esta ruta no existe' });
 });
+
 app.use((err, req, res, next) => {
-  
   console.error(err.stack);
   res.status(500).json({
     message_error: err.message || 'Error interno del servidor',

@@ -10,12 +10,7 @@ import jsonwebtoken from 'jsonwebtoken';
 class userController {
   static async getUserByToken(req, res, next) {
     try {
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
-      const { id } = jsonwebtoken.verify(
-        token,
-        process.env.ACCESS_TOKEN_SECRET
-      );
+      const id = req.userId;
       const user = await usersModel.getUserById(id);
       res.status(200).json({ user: { ...user, id: id } });
     } catch (error) {
@@ -47,11 +42,11 @@ class userController {
       next(error);
     }
   }
-  static async patchUserRides(req, res, next) {
+  static async addUserRides(req, res, next) {
     try {
       const { id } = req.params;
       const { rideId, arrivalPoints } = req.body;
-      await usersModel.patchUserRides(id, { rideId, arrivalPoints });
+      await usersModel.addUserRides(id, { rideId, arrivalPoints });
       res.status(200).json({ message: 'Viaje agendado correctamente' });
     } catch (error) {
       if (error.message === 'RideNotFound') {
@@ -97,12 +92,7 @@ class userController {
   }
   static async getUserNotifications(req, res, next) {
     try {
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1];
-      const { id } = jsonwebtoken.verify(
-        token,
-        process.env.ACCESS_TOKEN_SECRET
-      );
+      const id = req.userId;
       const notifications = await usersModel.userNotifications(id);
       res.status(200).json({ notifications: notifications });
     } catch (error) {
