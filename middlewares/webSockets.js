@@ -46,7 +46,7 @@ export const initializeWebSockets = (io) => {
         `Mensaje privado de ${socket.userId} a ${toUserId}: ${message}`
       );
 
-      await sendMessageToUser(io, toUserId, message);
+      await sendMessageToUser( toUserId, message);
     });
 
     socket.on('disconnect', () => {
@@ -68,16 +68,17 @@ export const initializeWebSockets = (io) => {
 
 const sendMessageToUser = async ( userId, message) => {
   const sockets = usersSockets.get(String(userId)) || [];
+
   sockets.forEach((socket) => {
-    socket.emit('message', message);
+    socket.emit('privateMessage', message);
     socket.emit('chatNotification', 'Tienes un nuevo mensaje');
   });
 };
 export const sendNotificationToUser = async ( userId, notification) => {
   const sockets = usersSockets.get(String(userId)) || [];
   console.log(`Enviando notificación a userId=${userId}: ${notification}`);
-  
+
   sockets.forEach((socket) => {
-    socket.emit('notification', notification);
+    socket.emit('appNotification', notification);
   });
 };
