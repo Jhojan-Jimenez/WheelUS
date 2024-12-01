@@ -32,7 +32,6 @@ class chatController {
           .status(400)
           .json({ message: 'You cannot chat with yourself' });
       }
-      await usersModel.getUserById(contactId);
       const newChat = await chatModel.createChat(userId, contactId);
       res.status(200).json({ chat: newChat });
     } catch (error) {
@@ -44,7 +43,6 @@ class chatController {
   }
   static async getMessages(req, res, next) {
     try {
-      const userId = req.userId;
       const { chatId } = req.params;
       const messages = await chatModel.getAllMessages(chatId);
       res.status(200).json({ messages });

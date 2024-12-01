@@ -5,7 +5,6 @@ import vehiclesModel from '../models/vehicles.js';
 
 export async function verifyVehiclePlate(req, res, next) {
   const { plate } = req.params;
-
   try {
     const vehicle = await vehiclesModel.getVehicleByPlate(plate);
     req.vehicle = vehicle;
@@ -28,6 +27,8 @@ export async function verifyRideID(req, res, next) {
   } catch (error) {
     if (error.message === 'RideNotFound') {
       return res.status(404).json({ message: 'No existe un ride con ese ID' });
+    }else if(error.message === 'InactiveRide'){
+      return res.status(400).json({ message: 'El ride no esta activo' });
     }
     next(error);
   }

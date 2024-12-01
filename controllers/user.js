@@ -4,6 +4,7 @@ import {
   validationErrors,
 } from '../errors/CustomErrors.js';
 import { userPatchSchema, validatePatchUserFields } from '../lib/validators.js';
+import { deleteNotificationByIndex } from '../models/notifications.js';
 import usersModel from '../models/users.js';
 import jsonwebtoken from 'jsonwebtoken';
 
@@ -95,6 +96,16 @@ class userController {
       const id = req.userId;
       const notifications = await usersModel.userNotifications(id);
       res.status(200).json({ notifications: notifications });
+    } catch (error) {
+      next(error);
+    }
+  }
+  static async deleteUserNotification(req, res, next) {
+    try {
+      const { notificationIndex } = req.params;
+      const userId = req.userId;
+      await deleteNotificationByIndex(userId, notificationIndex);
+      res.status(200).json({ message: 'Notificacion eliminada correctamente' });
     } catch (error) {
       next(error);
     }

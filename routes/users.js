@@ -11,5 +11,9 @@ userRouter.patch('/:id', verifyUserID, upload, userController.patchUser);
 userRouter.get('/:id/rides', verifyUserID, userController.getUserRides);
 userRouter.post('/:id/rides', verifyUserID, userController.addUserRides);
 userRouter.delete('/:id/rides', verifyUserID, userController.deleteUserRide);
+userRouter.delete(
+  '/:notificationIndex/notifications',
+  userController.deleteUserNotification
+);
 
 export default userRouter;

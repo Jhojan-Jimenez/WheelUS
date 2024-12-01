@@ -9,6 +9,7 @@ import ridesModel from './rides.js';
 import vehiclesModel from './vehicles.js';
 import { UserNotFoundError } from '../errors/CustomErrors.js';
 import { addNotification } from './notifications.js';
+import { sendNotificationToUser } from '../middlewares/webSockets.js';
 class usersModel {
   static async existUser({ email, password }) {
     const hashedPassword = hashPassword(password);
@@ -114,13 +115,13 @@ class usersModel {
       const rides = userData.rides || [];
       arrivalPoints.forEach((point) => {
         const existingRideIndex = rides.findIndex(
-          (p) => p.rideId === rideId && p.point === point
+          (p) => p.id === rideId && p.point === point
         );
 
         if (existingRideIndex >= 0) {
           rides[existingRideIndex].cantidad += 1;
         } else {
-          rides.push({ rideId, point, cantidad: 1 });
+          rides.push({ id: rideId, point, cantidad: 1 });
         }
       });
       transaction.update(userRef, {
@@ -139,16 +140,27 @@ class usersModel {
 
   static async getUserRides(id) {
     const user = await this.getUserById(id);
+
     const ridesInfo = user.rides
       ? await Promise.all(
-          user.rides.map(async ({ rideId, point, cantidad }) => {
-            const rideData = await ridesModel.getRideById(rideId);
-            return rideData.isActive ? { rideId, ...rideData } : null;
+          user.rides.flatMap(async ({ id, point, cantidad }) => {
+            const rideData = await ridesModel.getRideById(id);
+            if (rideData.isActive) {
+              // Genera un array replicado según la cantidad
+              return Array.from({ length: cantidad }, () => ({
+                id,
+                point,
+                ...rideData,
+              }));
+            }
+            return [];
           })
-        ).then((rides) => rides.filter(Boolean))
+        ).then((rides) => rides.flat().filter(Boolean))
       : [];
 
-    return ridesInfo;
+    return ridesInfo.sort(
+      (a, b) => new Date(a.departure) - new Date(b.departure)
+    );
   }
   static async deleteUserRide({ userId, rideId, point }) {
     const userRef = db.collection('users').doc(userId);
@@ -171,7 +183,7 @@ class usersModel {
       const driverRef = db.collection('users').doc(vehicle.id_driver);
 
       const rideIndex = userData.rides.findIndex(
-        (ride) => ride.rideId === rideId && ride.point === point
+        (ride) => ride.id === rideId && ride.point === point
       );
 
       if (rideIndex === -1) {
@@ -190,16 +202,42 @@ class usersModel {
         rides: userData.rides,
       });
 
+      if (ride.cantidad === 1) {
+        transaction.update(rideRef, {
+          passengers: rideData.passengers.filter(
+            (passenger) => passenger.userId !== userId
+          ),
+        });
+      } else {
+        transaction.update(rideRef, {
+          passengers: rideData.passengers.map((passenger) => {
+            if (passenger.userId === userId) {
+              passenger.cantidad -= 1;
+              passenger.arrivalPoints = passenger.arrivalPoints.filter(
+                (p) => p !== point
+              );
+            }
+            return passenger;
+          }),
+        });
+      }
+
       transaction.update(rideRef, {
         available_seats: admin.firestore.FieldValue.increment(1),
       });
 
       const userName = `${userData.name} ${userData.lastname}`;
-      await addNotification(
-        driverRef,
-        'ride',
-        `${userName} abandonó tu ride hasta ${point}`,
-        obtainLocalTime()
+
+      transaction.update(driverRef, {
+        notifications: admin.firestore.FieldValue.arrayUnion({
+          type: 'ride',
+          content: `${userName} abandonó tu ride hasta ${point}`,
+          timestamp: obtainLocalTime(),
+        }),
+      });
+      await sendNotificationToUser(
+        userRef.id,
+        `${userName} abandonó tu ride hasta ${point}`
       );
     });
   }

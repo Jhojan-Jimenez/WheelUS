@@ -19,10 +19,12 @@ class vehiclesModel {
       vehiclePhoto,
       soat
     );
-    const userRef = db.collection('users').doc(id);
+    console.log(vehicleData);
+
+    const userRef = db.collection('users').doc(vehicleData.id_driver);
 
     await userRef.update({
-      vehicle_plate: plate,
+      vehicle_plate: vehicleData.plate,
     });
     return finalData;
   }
@@ -32,13 +34,6 @@ class vehiclesModel {
       throw new Error('VehicleNotFound');
     }
     return vehicle.data();
-  }
-  static async addRideToVehicle(rideId, plate) {
-    const vehicleRef = db.collection('vehicles').doc(plate);
-
-    await vehicleRef.update({
-      rides: admin.firestore.FieldValue.arrayUnion(rideId),
-    });
   }
   static async patchVehicle(plate, newData) {
     const vehicleRef = db.collection('vehicles').doc(plate);
@@ -56,9 +51,7 @@ class vehiclesModel {
 
     await vehicleRef.update(updateData);
   }
-  static async deleteVehicle(plate) {
-    const vehicleRef = db.collection('vehicles').doc(plate);
-    const vehicleData = (await vehicleRef.get()).data();
+  static async deleteVehicle(vehicleData) {
     if (vehicleData.rides && vehicleData.rides.length > 0) {
       throw new Error('VehicleHaveActiveRides');
     }
@@ -68,20 +61,20 @@ class vehiclesModel {
       vehicle_plate: admin.firestore.FieldValue.delete(),
     });
   }
-  static async getVehicleRides(plate) {
-    const vehicle = await this.getVehicleByPlate(plate);
+  static async getVehicleRides(vehicle) {
+    if (!vehicle.rides || vehicle.rides.length === 0) return [];
+    const rideRefs = vehicle.rides.map((rideId) =>
+      db.collection('rides').doc(rideId)
+    );
+    const snapshots = await db.getAll(...rideRefs);
 
-    const ridesInfo = vehicle.rides
-      ? await Promise.all(
-          vehicle.rides.map(async (rideId) => {
-            const rideData = await ridesModel.getRideById(rideId);
-            if (!rideData.isActive) return null;
-            return { rideId, ...rideData };
-          })
-        ).then((rides) => rides.filter(Boolean))
-      : [];
+    const ridesInfo = snapshots
+      .filter((snap) => snap.exists && snap.data().isActive)
+      .map((snap) => ({ id: snap.id, ...snap.data() }));
 
-    return ridesInfo;
+    return ridesInfo.sort(
+      (a, b) => new Date(a.departure) - new Date(b.departure)
+    );
   }
 }
 async function uniqueVehicle(vehicleData) {

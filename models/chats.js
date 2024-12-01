@@ -46,7 +46,6 @@ class chatModel {
   }
 
   static async getAllMessages(chatId) {
-    console.log(chatId);
 
     const snapshot = await db
       .collection('messages')

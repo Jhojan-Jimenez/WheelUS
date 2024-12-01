@@ -33,7 +33,6 @@ export const initializeWebSockets = (io) => {
 
     console.log(`Usuario conectado: userId=${userId}, socketId=${socket.id}`);
 
-    // Manejo de eventos
     socket.on('message', (msg) => {
       console.log(`Mensaje recibido de userId=${userId}: ${msg}`);
       socket.emit('message', `Reenvio por parte del servidor: ${msg}`);
@@ -46,7 +45,7 @@ export const initializeWebSockets = (io) => {
         `Mensaje privado de ${socket.userId} a ${toUserId}: ${message}`
       );
 
-      await sendMessageToUser( toUserId, message);
+      await sendMessageToUser(toUserId, message);
     });
 
     socket.on('disconnect', () => {
@@ -66,7 +65,7 @@ export const initializeWebSockets = (io) => {
   });
 };
 
-const sendMessageToUser = async ( userId, message) => {
+const sendMessageToUser = async (userId, message) => {
   const sockets = usersSockets.get(String(userId)) || [];
 
   sockets.forEach((socket) => {
@@ -74,8 +73,9 @@ const sendMessageToUser = async ( userId, message) => {
     socket.emit('chatNotification', 'Tienes un nuevo mensaje');
   });
 };
-export const sendNotificationToUser = async ( userId, notification) => {
+export const sendNotificationToUser = async (userId, notification) => {
   const sockets = usersSockets.get(String(userId)) || [];
+
   console.log(`Enviando notificación a userId=${userId}: ${notification}`);
 
   sockets.forEach((socket) => {

@@ -4,7 +4,13 @@ import ridesModel from '../models/rides.js';
 
 class rideController {
   static async getRides(req, res, next) {
-    const allowedQueryParams = ['origin', 'destination', 'seats'];
+    const allowedQueryParams = [
+      'origin',
+      'destination',
+      'seats',
+      'offset',
+      'limit',
+    ];
     try {
       const queryParams = req.body;
       const queryParamsKeys = Object.keys(queryParams);
@@ -15,9 +21,9 @@ class rideController {
       if (!isValid) {
         return res.status(400).json({ error: 'Invalid query parameters' });
       }
-      const rides = await ridesModel.getAllRides(queryParams);
+      const { total, rides } = await ridesModel.getAllRides(queryParams);
 
-      res.status(200).json({ rides: rides });
+      res.status(200).json({ rides, total });
     } catch (error) {
       next(error);
     }
@@ -42,6 +48,10 @@ class rideController {
         return res
           .status(409)
           .json({ message: 'No tienes suficientes asientos en tu carro' });
+      } else if (error.message === 'InvalidDeparture') {
+        return res.status(409).json({
+          message: 'La fecha de salida no puede ser menor a la actual',
+        });
       }
 
       next(error);
@@ -60,10 +70,10 @@ class rideController {
         message: 'Ride eliminado correctamente',
       });
     } catch (error) {
-      if (error.message === 'RideHaveActivePassengers') {
+      if (error.message === 'RideCannotBeDeletedDueToProximity') {
         return res.status(409).json({
           message:
-            'El ride no puede eliminarse con menos de 30 minutos de antelación ',
+            'El ride no puede eliminarse con menos de 30 minutos de antelación si ya tienes pasajeros ',
         });
       }
       next(error);

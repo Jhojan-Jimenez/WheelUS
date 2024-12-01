@@ -14,22 +14,6 @@ class vehicleController {
     try {
       const vehicles = await vehiclesModel.getAllVehicles();
       res.status(200).json({ vehicles: vehicles });
-      //   if (user.length === 0) {
-      //     return res.status(403).json({ message: "User does not exists" });
-      //   } else {
-      //     const token = sign(
-      //       { email: authData.email },
-      //       process.env.ACCESS_TOKEN_SECRET,
-      //       { expiresIn: "1h" }
-      //     );
-      //     res.cookie("authToken", token, {
-      //       httpOnly: true,
-      //       secure: true,
-      //     });
-      //     res
-      //       .status(200)
-      //       .json({ message: "User correctly logged in", accessToken: token });
-      //   }
     } catch (error) {
       next(error);
     }
@@ -44,7 +28,6 @@ class vehicleController {
           : null;
       const soat =
         photos.soat && photos.soat.length > 0 ? photos.soat[0] : null;
-      console.log(soat, vehiclePhoto);
 
       const validData = vehicleSchema.safeParse({
         ...vehicleData,
@@ -118,8 +101,8 @@ class vehicleController {
   }
   static async deleteVehicle(req, res, next) {
     try {
-      const { plate } = req.params;
-      await vehiclesModel.deleteVehicle(plate);
+      const vehicle = req.vehicle;
+      await vehiclesModel.deleteVehicle(vehicle);
       res.status(200).json({
         message: 'Vehiculo eliminado correctamente',
       });
@@ -135,8 +118,8 @@ class vehicleController {
   }
   static async getVehicleRides(req, res, next) {
     try {
-      const { plate } = req.params;
-      const vehicleRides = await vehiclesModel.getVehicleRides(plate);
+      const vehicle = req.vehicle;
+      const vehicleRides = await vehiclesModel.getVehicleRides(vehicle);
       res.status(200).json({ vehicleRides: vehicleRides });
     } catch (error) {
       console.log(error);
