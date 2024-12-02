@@ -10,6 +10,7 @@ userRouter.get('/:id', verifyUserID, userController.getUserByID);
 userRouter.patch('/:id', verifyUserID, upload, userController.patchUser);
 userRouter.get('/:id/rides', verifyUserID, userController.getUserRides);
 userRouter.post('/:id/rides', verifyUserID, userController.addUserRides);
+userRouter.delete('/notifications', userController.deleteAllUserNotifications);
 userRouter.delete('/:id/rides', verifyUserID, userController.deleteUserRide);
 userRouter.delete(
   '/:notificationIndex/notifications',

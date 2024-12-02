@@ -58,6 +58,10 @@ class userController {
         return res
           .status(400)
           .json({ message: 'No hay suficientes asientos disponibles' });
+      } else if (error.message === 'NoArrivalPoints') {
+        return res
+          .status(400)
+          .json({ message: 'No se han seleccionado puntos de llegada' });
       }
       next(error);
     }
@@ -106,6 +110,17 @@ class userController {
       const userId = req.userId;
       await deleteNotificationByIndex(userId, notificationIndex);
       res.status(200).json({ message: 'Notificacion eliminada correctamente' });
+    } catch (error) {
+      next(error);
+    }
+  }
+  static async deleteAllUserNotifications(req, res, next) {
+    try {
+      const userId = req.userId;
+      await usersModel.deleteAllUserNotifications(userId);
+      res
+        .status(200)
+        .json({ message: 'Notificaciones eliminadas correctamente' });
     } catch (error) {
       next(error);
     }

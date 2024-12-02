@@ -63,6 +63,9 @@ class usersModel {
   static async addUserRides(id, { rideId, arrivalPoints }) {
     const rideRef = db.collection('rides').doc(rideId);
     const userRef = db.collection('users').doc(id);
+    if (!arrivalPoints || arrivalPoints.length === 0) {
+      throw new Error('NoArrivalPoints');
+    }
 
     const vehicle = await vehiclesModel.getVehicleByPlate(
       (await rideRef.get()).data().vehicle_plate
@@ -245,6 +248,10 @@ class usersModel {
   static async postUser(userData, photo) {
     await uniqueUser(userData.id, userData.email);
     await saveUserInFirestore(userData, photo);
+  }
+  static async deleteAllUserNotifications(id) {
+    const userRef = db.collection('users').doc(id);
+    await userRef.update({ notifications: [] });
   }
 }
 async function uniqueUser(id, email) {
